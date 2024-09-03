@@ -1,5 +1,6 @@
 use std::{error::Error, io};
 
+use color_eyre::config::HookBuilder;
 use ratatui::{
     crossterm::{
         cursor::SetCursorStyle,
@@ -9,8 +10,6 @@ use ratatui::{
     },
     prelude::*,
 };
-
-use color_eyre::config::HookBuilder;
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
@@ -86,9 +85,49 @@ pub fn run_tui<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                     // Skip events that are not KeyEventKind::Press
                     continue;
                 }
+                use KeyCode::*;
                 match key.code {
-                    KeyCode::Char('q') => return Ok(false),
-                    _ => {}
+                    Char('q') => return Ok(false),
+                    Char('+') => {
+                        app.noise_intensity += 0.1;
+                        app.show_info = true;
+                    }
+                    Char('-') => {
+                        app.noise_intensity -= 0.1;
+                        app.show_info = true;
+                    }
+                    Up => {
+                        app.min_brightness += 0.1;
+                        app.max_brightness += 0.1;
+                        app.show_info = true;
+                    }
+                    Down => {
+                        app.min_brightness -= 0.1;
+                        app.max_brightness -= 0.1;
+                        app.show_info = true;
+                    }
+                    Right => {
+                        app.min_brightness -= 0.1;
+                        app.max_brightness += 0.1;
+                        app.show_info = true;
+                    }
+                    Left => {
+                        app.min_brightness += 0.1;
+                        app.max_brightness -= 0.1;
+                        if app.min_brightness > app.max_brightness {
+                            let tmp = app.min_brightness;
+                            app.min_brightness = app.max_brightness;
+                            app.max_brightness = tmp;
+                        }
+                        app.show_info = true;
+                    }
+                    Char('r') => {
+                        let new_app = App::new();
+                        *app = new_app;
+                    }
+                    _ => {
+                        app.show_info = false;
+                    }
                 }
             }
         }

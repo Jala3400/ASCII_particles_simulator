@@ -2,6 +2,8 @@ pub struct App {
     pub noise_intensity: f32,
     pub min_brightness: f32,
     pub max_brightness: f32,
+
+    pub show_info: bool,
 }
 
 impl App {
@@ -16,6 +18,8 @@ impl App {
             noise_intensity: 1.0,
             min_brightness: -1.0,
             max_brightness: 1.0,
+
+            show_info: false,
         }
     }
 }
