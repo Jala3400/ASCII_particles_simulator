@@ -1,6 +1,7 @@
 use std::{error::Error, io};
 
 use color_eyre::config::HookBuilder;
+use crossterm::event::KeyEvent;
 use ratatui::{
     crossterm::{
         cursor::SetCursorStyle,
@@ -14,9 +15,10 @@ use ratatui::{
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 mod app;
-use app::App;
+use app::{App, CurrentScreen};
 mod ui;
 use ui::ui;
+mod simulations;
 
 fn main() -> Result<()> {
     init_error_hooks()?;
@@ -88,48 +90,76 @@ pub fn run_tui<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                 use KeyCode::*;
                 match key.code {
                     Char('q') => return Ok(false),
-                    Char('+') => {
-                        app.noise_intensity += 0.1;
-                        app.show_info = true;
+                    Char('n') | Char('1') => app.current_screen = CurrentScreen::Noise,
+                    Char('f') | Char('2') => app.current_screen = CurrentScreen::Fire,
+                    Tab => {
+                        app.particles_index =
+                            (app.particles_index + 1) % app.particles_styles.len();
                     }
-                    Char('-') => {
-                        app.noise_intensity -= 0.1;
-                        app.show_info = true;
-                    }
-                    Up => {
-                        app.min_brightness += 0.1;
-                        app.max_brightness += 0.1;
-                        app.show_info = true;
-                    }
-                    Down => {
-                        app.min_brightness -= 0.1;
-                        app.max_brightness -= 0.1;
-                        app.show_info = true;
-                    }
-                    Right => {
-                        app.min_brightness -= 0.1;
-                        app.max_brightness += 0.1;
-                        app.show_info = true;
-                    }
-                    Left => {
-                        app.min_brightness += 0.1;
-                        app.max_brightness -= 0.1;
-                        if app.min_brightness > app.max_brightness {
-                            let tmp = app.min_brightness;
-                            app.min_brightness = app.max_brightness;
-                            app.max_brightness = tmp;
-                        }
-                        app.show_info = true;
-                    }
-                    Char('r') => {
-                        let new_app = App::new();
-                        *app = new_app;
-                    }
-                    _ => {
-                        app.show_info = false;
-                    }
+
+                    _ => match app.current_screen {
+                        CurrentScreen::Noise => handle_noise_key(key, app),
+                        CurrentScreen::Fire => handle_fire_key(key, app),
+                    },
                 }
             }
+            if let event::Event::Resize(width, height) = event::read()? {
+                app.fire_data.particles = vec![vec![0.0; width as usize]; height as usize];
+            }
         }
+    }
+}
+
+fn handle_noise_key(key: KeyEvent, app: &mut App) {
+    use KeyCode::*;
+    match key.code {
+        Char('+') => {
+            app.noise_data.noise_intensity += 0.1;
+            app.show_info = true;
+        }
+        Char('-') => {
+            app.noise_data.noise_intensity -= 0.1;
+            app.show_info = true;
+        }
+        Up => {
+            app.noise_data.min_brightness += 0.1;
+            app.noise_data.max_brightness += 0.1;
+            app.show_info = true;
+        }
+        Down => {
+            app.noise_data.min_brightness -= 0.1;
+            app.noise_data.max_brightness -= 0.1;
+            app.show_info = true;
+        }
+        Right => {
+            app.noise_data.min_brightness -= 0.1;
+            app.noise_data.max_brightness += 0.1;
+            app.show_info = true;
+        }
+        Left => {
+            app.noise_data.min_brightness += 0.1;
+            app.noise_data.max_brightness -= 0.1;
+            if app.noise_data.min_brightness > app.noise_data.max_brightness {
+                let tmp = app.noise_data.min_brightness;
+                app.noise_data.min_brightness = app.noise_data.max_brightness;
+                app.noise_data.max_brightness = tmp;
+            }
+            app.show_info = true;
+        }
+        Char('r') => {
+            let new_app = App::new();
+            *app = new_app;
+        }
+        _ => {
+            app.show_info = false;
+        }
+    }
+}
+
+fn handle_fire_key(key: KeyEvent, app: &mut App) {
+    use KeyCode::*;
+    match key.code {
+        Char('q') => return,
+        _ => {}
     }
 }
