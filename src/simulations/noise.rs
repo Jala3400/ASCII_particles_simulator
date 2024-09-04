@@ -1,12 +1,12 @@
 use rand::Rng;
 use ratatui::{
-    layout::Rect,
     widgets::{Block, BorderType, Borders, Clear, Paragraph},
     Frame,
 };
 
 use crate::{app::App, ui::centered_area};
 
+#[derive(Clone)]
 pub struct NoiseData {
     pub noise_intensity: f32,
     pub min_brightness: f32,

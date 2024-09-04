@@ -5,6 +5,7 @@ use ratatui::{
 
 use crate::{app::App, ui::centered_area};
 
+#[derive(Clone)]
 pub struct FireData {
     pub particles: Vec<Vec<f32>>,
     pub fire_intensity: f32,
@@ -23,7 +24,10 @@ impl FireData {
             below_intensity: 0.5,
         }
     }
+
+    pub fn change_dimensions(&mut self, width: usize, height: usize) {
+        self.particles = vec![vec![0.0; width]; height];
+        self.particles[height - 1] = vec![1.0; width];
+    }
 }
-pub fn draw_fire(f: &mut Frame, app: &App) {
-    
-}
+pub fn draw_fire(f: &mut Frame, app: &App) {}
