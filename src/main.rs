@@ -4,51 +4,53 @@ mod simulations;
 mod tui;
 
 mod ui;
-use app::{App, AppResult};
+use app::{App, AppResult, CurrentScreen};
 use crossterm::event::{self, Event};
-use handler::{handle_key_events, handle_resize_event};
+use handler::handle_key_events;
 use ratatui::prelude::*;
-use std::{
-    io,
-    sync::{Arc, RwLock},
-    thread,
-    time::Duration,
-};
+use std::{io, sync::mpsc, thread, time::Duration};
 use tui::Tui;
 
 fn main() -> AppResult<()> {
     // Create an application.
-    let app = App::new();
+    let mut app = App::new();
 
     // Initialize the terminal user interface.
     let backend = CrosstermBackend::new(io::stdout());
     let terminal = Terminal::new(backend)?;
+
+    // Get the size of the terminal screen
+    let terminal_size = terminal.size()?;
+    let screen_width = terminal_size.width as usize;
+    let screen_height = terminal_size.height as usize;
+    app.fire_data.change_dimensions(screen_width, screen_height);
+
     let mut tui = Tui::new(terminal);
     tui.init()?;
 
-    // Create a RwLock wrapped in an Arc, which protects the shared data (an integer in this case).
-    let shared_data = Arc::new(RwLock::new(app));
-    // Clone the Arc to share it with the first thread
-    let writer_data = Arc::clone(&shared_data);
-    // Clone the Arc to share it with the reader thread
-    let reader_data = Arc::clone(&shared_data);
+    let mut app_2 = app.clone();
+
+    let (tx, rx) = mpsc::channel();
 
     // Spawn a thread for handling input
     thread::spawn(move || {
-        while writer_data.read().unwrap().running {
-            if let Ok(event) = event::read() {
-                match event {
-                    Event::Key(event) => handle_key_events(event, writer_data.write().unwrap()).unwrap(),
-                    Event::Resize(x, y) => handle_resize_event(writer_data.write().unwrap(), x, y).unwrap(),
-                    _ => {}
+        while app.running {
+            if let Ok(Event::Key(event)) = event::read() {
+                if handle_key_events(event, &mut app) {
+                    tx.send(app.clone()).unwrap();
                 }
             }
         }
     });
 
-    while reader_data.read().unwrap().running {
+    while app_2.running {
         // Draw the particles
-        tui.draw(&mut reader_data.read().unwrap().clone())?;
+        tui.draw(&mut app_2)?;
+
+        // Receive the application state from the input thread
+        if let Ok(new_app) = rx.try_recv() {
+            app_2 = new_app;
+        }
 
         // Sleep for a short period to control the simulation speed
         thread::sleep(Duration::from_millis(100));

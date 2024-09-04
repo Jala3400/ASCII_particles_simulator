@@ -5,7 +5,7 @@ use crate::{
     simulations::{fire, noise},
 };
 
-pub fn render(f: &mut Frame, app: &App) {
+pub fn render(f: &mut Frame, app: &mut App) {
     match app.current_screen {
         CurrentScreen::Noise => noise::draw_noise(f, app),
         CurrentScreen::Fire => fire::draw_fire(f, app),

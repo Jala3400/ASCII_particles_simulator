@@ -1,12 +1,13 @@
-use std::sync::RwLockWriteGuard;
-
 use crossterm::event::{self, KeyCode, KeyEvent};
 
-use crate::app::{App, AppResult, CurrentScreen};
+use crate::{
+    app::{App, CurrentScreen},
+    simulations::{fire::FireData, noise::NoiseData},
+};
 
-pub fn handle_key_events(key_event: KeyEvent, mut app: RwLockWriteGuard<App>) -> AppResult<()> {
+pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> bool {
     if key_event.kind == event::KeyEventKind::Release {
-        return Ok(());
+        return false;
     }
     use KeyCode::*;
     match key_event.code {
@@ -21,40 +22,40 @@ pub fn handle_key_events(key_event: KeyEvent, mut app: RwLockWriteGuard<App>) ->
         Tab => {
             app.particles_index = (app.particles_index + 1) % app.particles_styles.len();
         }
-        _ => match app.current_screen {
-            CurrentScreen::Noise => handle_noise_key(key_event, app),
-            CurrentScreen::Fire => handle_fire_key(key_event, app),
-        },
+        _ => {
+            app.show_info = true;
+            match app.current_screen {
+                CurrentScreen::Noise => return handle_noise_key(key_event, app),
+                CurrentScreen::Fire => return handle_fire_key(key_event, app),
+            }
+        }
     }
 
-    Ok(())
+    app.show_info = false;
+
+    true
 }
 
-fn handle_noise_key(key: KeyEvent, mut app: RwLockWriteGuard<App>) {
+fn handle_noise_key(key: KeyEvent, app: &mut App) -> bool {
     use KeyCode::*;
     match key.code {
         Char('+') => {
             app.noise_data.noise_intensity += 0.1;
-            app.show_info = true;
         }
         Char('-') => {
             app.noise_data.noise_intensity -= 0.1;
-            app.show_info = true;
         }
         Up => {
             app.noise_data.min_brightness += 0.1;
             app.noise_data.max_brightness += 0.1;
-            app.show_info = true;
         }
         Down => {
             app.noise_data.min_brightness -= 0.1;
             app.noise_data.max_brightness -= 0.1;
-            app.show_info = true;
         }
         Right => {
             app.noise_data.min_brightness -= 0.1;
             app.noise_data.max_brightness += 0.1;
-            app.show_info = true;
         }
         Left => {
             app.noise_data.min_brightness += 0.1;
@@ -64,30 +65,30 @@ fn handle_noise_key(key: KeyEvent, mut app: RwLockWriteGuard<App>) {
                 app.noise_data.min_brightness = app.noise_data.max_brightness;
                 app.noise_data.max_brightness = tmp;
             }
-            app.show_info = true;
         }
         Char('r') => {
-            let new_app = App::new();
-            *app = new_app;
+            let new_noise_info = NoiseData::new();
+            app.noise_data = new_noise_info;
         }
         _ => {
             app.show_info = false;
         }
     }
+
+    true
 }
 
-fn handle_fire_key(key: KeyEvent, mut app: RwLockWriteGuard<App>) {
+fn handle_fire_key(key: KeyEvent, app: &mut App) -> bool {
     use KeyCode::*;
     match key.code {
-        Char('q') => return,
-        _ => {}
+        Char('r') => {
+            let new_fire_data = FireData::new();
+            app.fire_data = new_fire_data;
+        }
+        _ => {
+            app.show_info = false;
+        }
     }
-}
 
-pub fn handle_resize_event(mut app: RwLockWriteGuard<App>, x: u16, y: u16) -> AppResult<()> {
-    match app.current_screen {
-        CurrentScreen::Noise => {}
-        CurrentScreen::Fire => app.fire_data.change_dimensions(x as usize, y as usize),
-    }
-    Ok(())
+    true
 }

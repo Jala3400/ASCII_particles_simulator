@@ -23,7 +23,7 @@ impl NoiseData {
     }
 }
 
-pub fn draw_noise(f: &mut Frame, app: &App) {
+pub fn draw_noise(f: &mut Frame, app: &mut App) {
     let f_area = f.area();
     f.render_widget(Clear, f_area); //this clears the entire screen and anything already drawn
 
