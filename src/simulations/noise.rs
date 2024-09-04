@@ -8,9 +8,9 @@ use crate::{app::App, ui::centered_area};
 
 #[derive(Clone)]
 pub struct NoiseData {
-    pub noise_intensity: f32,
-    pub min_brightness: f32,
-    pub max_brightness: f32,
+    pub noise_intensity: f64,
+    pub min_brightness: f64,
+    pub max_brightness: f64,
 }
 
 impl NoiseData {
@@ -58,6 +58,6 @@ pub fn draw_noise(f: &mut Frame, app: &mut App) {
             app.noise_data.max_brightness,
         ))
         .block(block);
-        f.render_widget(info, centered_area(23, 5, f_area));
+        f.render_widget(info, centered_area(25, 5, f_area));
     }
 }

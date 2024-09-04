@@ -4,7 +4,7 @@ mod simulations;
 mod tui;
 
 mod ui;
-use app::{App, AppResult, CurrentScreen};
+use app::{App, AppResult};
 use crossterm::event::{self, Event};
 use handler::handle_key_events;
 use ratatui::prelude::*;

@@ -15,10 +15,6 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> bool {
         Char('n') => app.current_screen = CurrentScreen::Noise,
         Char('f') => app.current_screen = CurrentScreen::Fire,
         Char('i') => app.show_info = !app.show_info,
-        Char('r') => {
-            let new_app = App::new();
-            *app = new_app;
-        }
         Tab => {
             app.particles_index = (app.particles_index + 1) % app.particles_styles.len();
         }
@@ -81,6 +77,30 @@ fn handle_noise_key(key: KeyEvent, app: &mut App) -> bool {
 fn handle_fire_key(key: KeyEvent, app: &mut App) -> bool {
     use KeyCode::*;
     match key.code {
+        Char('+') => {
+            app.fire_data.noise_intensity += 0.01;
+        }
+        Char('-') => {
+            app.fire_data.noise_intensity -= 0.01;
+        }
+        Up => {
+            app.fire_data.below_intensity += 0.01;
+        }
+        Down => {
+            app.fire_data.below_intensity -= 0.01;
+        }
+        Right => {
+            app.fire_data.past_intensity += 0.01;
+        }
+        Left => {
+            app.fire_data.past_intensity -= 0.01;
+        }
+        Char('.') => {
+            app.fire_data.fire_intensity += 0.01;
+        }
+        Char(',') => {
+            app.fire_data.fire_intensity -= 0.01;
+        }
         Char('r') => {
             let new_fire_data = FireData::new();
             app.fire_data = new_fire_data;
