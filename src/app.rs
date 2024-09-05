@@ -8,6 +8,7 @@ pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 #[derive(Clone)]
 pub struct App {
     pub running: bool,
+    pub particles: Vec<Vec<f64>>,
     pub current_screen: CurrentScreen,
     pub noise_data: NoiseData,
     pub fire_data: FireData,
@@ -26,6 +27,7 @@ impl App {
     pub fn new() -> Self {
         App {
             running: true,
+            particles: vec![vec![0.0; 100]; 100],
             current_screen: CurrentScreen::Noise,
             noise_data: NoiseData::new(),
             fire_data: FireData::new(),
@@ -39,5 +41,9 @@ impl App {
     /// Set running to false to quit the application.
     pub fn quit(&mut self) {
         self.running = false;
+    }
+
+    pub fn change_dimensions(&mut self, width: usize, height: usize) {
+        self.particles = vec![vec![0.0; width]; height];
     }
 }

@@ -5,9 +5,9 @@ use crate::{
     simulations::{fire::FireData, noise::NoiseData},
 };
 
-pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> bool {
+pub fn handle_key_events(key_event: KeyEvent, app: &mut App) {
     if key_event.kind == event::KeyEventKind::Release {
-        return false;
+        return;
     }
     use KeyCode::*;
     match key_event.code {
@@ -28,11 +28,9 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> bool {
     }
 
     app.show_info = false;
-
-    true
 }
 
-fn handle_noise_key(key: KeyEvent, app: &mut App) -> bool {
+fn handle_noise_key(key: KeyEvent, app: &mut App) {
     use KeyCode::*;
     match key.code {
         Char('+') => {
@@ -70,11 +68,9 @@ fn handle_noise_key(key: KeyEvent, app: &mut App) -> bool {
             app.show_info = false;
         }
     }
-
-    true
 }
 
-fn handle_fire_key(key: KeyEvent, app: &mut App) -> bool {
+fn handle_fire_key(key: KeyEvent, app: &mut App) {
     use KeyCode::*;
     match key.code {
         Char('+') => {
@@ -109,6 +105,4 @@ fn handle_fire_key(key: KeyEvent, app: &mut App) -> bool {
             app.show_info = false;
         }
     }
-
-    true
 }

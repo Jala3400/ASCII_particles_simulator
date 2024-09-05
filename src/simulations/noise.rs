@@ -29,11 +29,13 @@ pub fn draw_noise(f: &mut Frame, app: &mut App) {
 
     let mut particles: String = String::new();
 
-    for _ in 0..f_area.height {
-        for _ in 0..f_area.width {
+    for i in 0..app.particles.len() {
+        for j in 0..app.particles[0].len() {
             let particle_brightness = rand::thread_rng()
                 .gen_range(app.noise_data.min_brightness..app.noise_data.max_brightness)
                 * app.noise_data.noise_intensity;
+
+            app.particles[i as usize][j as usize] = particle_brightness;
 
             let idx = (particle_brightness * 4.0).clamp(0.0, 3.0) as usize;
 
@@ -57,7 +59,7 @@ pub fn draw_info(f: &mut Frame, app: &mut App) {
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded);
     let info = Paragraph::new(format!(
-        "Noise intensity: {}     \nMin brightness: {}     \nMax brightness: {}     ",
+        "Noise intensity: {}          \nMin brightness: {}          \nMax brightness: {}          ",
         app.noise_data.noise_intensity,
         app.noise_data.min_brightness,
         app.noise_data.max_brightness,

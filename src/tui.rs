@@ -48,7 +48,34 @@ impl<B: Backend> Tui<B> {
     /// [`Draw`]: ratatui::Terminal::draw
     /// [`rendering`]: crate::ui::render
     pub fn draw(&mut self, app: &mut App) -> AppResult<()> {
-        self.terminal.draw(|frame| ui::render(frame, app))?;
+        self.terminal.draw(|frame| {
+            let f_area = frame.area();
+
+            let height = f_area.height;
+            let width = f_area.width;
+
+            if height != app.particles.len() as u16 || width != app.particles[0].len() as u16 {
+                app.change_dimensions(width as usize, height as usize);
+            }
+
+            ui::render(frame, app);
+        })?;
+        Ok(())
+    }
+
+    pub fn update(&mut self, app: &mut App) -> AppResult<()> {
+        self.terminal.draw(|frame| {
+            let f_area = frame.area();
+
+            let height = f_area.height;
+            let width = f_area.width;
+
+            if height != app.particles.len() as u16 || width != app.particles[0].len() as u16 {
+                app.change_dimensions(width as usize, height as usize);
+            }
+
+            ui::update(frame, app)
+        })?;
         Ok(())
     }
 

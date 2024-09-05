@@ -30,7 +30,6 @@ fn main() -> AppResult<()> {
     let screen_height = terminal_size.height as usize;
     app.lock()
         .unwrap()
-        .fire_data
         .change_dimensions(screen_width, screen_height);
 
     let tui = Arc::new(Mutex::new(Tui::new(terminal)));
@@ -42,8 +41,21 @@ fn main() -> AppResult<()> {
     // Spawn a thread for handling input
     thread::spawn(move || {
         while app.lock().unwrap().running {
-            if let Ok(Event::Key(event)) = event::read() {
-                handle_key_events(event, &mut app.lock().unwrap());
+            if let Ok(event) = event::read() {
+                match event {
+                    Event::Key(event) => {
+                        let mut app_lock = app.lock().unwrap();
+                        handle_key_events(event, &mut app_lock);
+                        tui.lock().unwrap().update(&mut app_lock).unwrap();
+                    }
+                    Event::Resize(_, _) => {
+                        tui.lock()
+                            .unwrap()
+                            .update(&mut app.lock().unwrap())
+                            .unwrap();
+                    }
+                    _ => {}
+                }
             }
         }
     });
