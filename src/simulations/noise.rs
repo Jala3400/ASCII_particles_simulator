@@ -47,17 +47,21 @@ pub fn draw_noise(f: &mut Frame, app: &mut App) {
     f.render_widget(particles, f_area);
 
     if app.show_info {
-        let block = Block::default()
-            .title("Info")
-            .borders(Borders::ALL)
-            .border_type(BorderType::Rounded);
-        let info = Paragraph::new(format!(
-            "Noise intensity: {}     \nMin brightness: {}     \nMax brightness: {}     ",
-            app.noise_data.noise_intensity,
-            app.noise_data.min_brightness,
-            app.noise_data.max_brightness,
-        ))
-        .block(block);
-        f.render_widget(info, centered_area(25, 5, f_area));
+        draw_info(f, app)
     }
+}
+
+pub fn draw_info(f: &mut Frame, app: &mut App) {
+    let block = Block::default()
+        .title("Info")
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded);
+    let info = Paragraph::new(format!(
+        "Noise intensity: {}     \nMin brightness: {}     \nMax brightness: {}     ",
+        app.noise_data.noise_intensity,
+        app.noise_data.min_brightness,
+        app.noise_data.max_brightness,
+    ))
+    .block(block);
+    f.render_widget(info, centered_area(25, 5, f.area()));
 }

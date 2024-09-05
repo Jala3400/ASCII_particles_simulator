@@ -79,18 +79,22 @@ pub fn draw_fire(f: &mut Frame, app: &mut App) {
     f.render_widget(particles, f_area);
 
     if app.show_info {
-        let block = Block::default()
-            .title("Info")
-            .borders(Borders::ALL)
-            .border_type(BorderType::Rounded);
-        let info = Paragraph::new(format!(
-            "Noise intensity: {}     \nFire intensity: {}     \nPast intensity: {}     \nBelow intensity: {}     ",
-            app.fire_data.noise_intensity,
-            app.fire_data.fire_intensity,
-            app.fire_data.past_intensity,
-            app.fire_data.below_intensity,
-        ))
-        .block(block);
-        f.render_widget(info, centered_area(25, 6, f_area));
+        draw_info(f, app);
     }
+}
+
+pub fn draw_info(f: &mut Frame, app: &mut App) {
+    let block = Block::default()
+        .title("Info")
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded);
+    let info = Paragraph::new(format!(
+    "Noise intensity: {}     \nFire intensity: {}     \nPast intensity: {}     \nBelow intensity: {}     ",
+    app.fire_data.noise_intensity,
+    app.fire_data.fire_intensity,
+    app.fire_data.past_intensity,
+    app.fire_data.below_intensity,
+))
+.block(block);
+    f.render_widget(info, centered_area(25, 6, f.area()));
 }
