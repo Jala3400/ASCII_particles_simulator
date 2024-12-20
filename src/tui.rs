@@ -63,22 +63,6 @@ impl<B: Backend> Tui<B> {
         Ok(())
     }
 
-    pub fn update(&mut self, app: &mut App) -> AppResult<()> {
-        self.terminal.draw(|frame| {
-            let f_area = frame.area();
-
-            let height = f_area.height;
-            let width = f_area.width;
-
-            if height != app.particles.len() as u16 || width != app.particles[0].len() as u16 {
-                app.change_dimensions(width as usize, height as usize);
-            }
-
-            ui::update(frame, app)
-        })?;
-        Ok(())
-    }
-
     /// Resets the terminal interface.
     ///
     /// This function is also used for the panic hook to revert

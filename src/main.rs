@@ -1,10 +1,9 @@
 mod app;
 mod handler;
-mod simulations;
 mod tui;
 
 mod ui;
-use app::{App, AppResult};
+use app::{App, AppResult, LuaApp};
 use crossterm::event::{self, Event};
 use handler::handle_key_events;
 use ratatui::prelude::*;
@@ -46,13 +45,10 @@ fn main() -> AppResult<()> {
                     Event::Key(event) => {
                         let mut app_lock = app.lock().unwrap();
                         handle_key_events(event, &mut app_lock);
-                        tui.lock().unwrap().update(&mut app_lock).unwrap();
+                        tui.lock().unwrap().draw(&mut app_lock).unwrap();
                     }
                     Event::Resize(_, _) => {
-                        tui.lock()
-                            .unwrap()
-                            .update(&mut app.lock().unwrap())
-                            .unwrap();
+                        tui.lock().unwrap().draw(&mut app.lock().unwrap()).unwrap();
                     }
                     _ => {}
                 }
@@ -60,7 +56,16 @@ fn main() -> AppResult<()> {
         }
     });
 
+    let mut lua_app = LuaApp::new();
+    lua_app.load_simulation("src/simulations_lua/noise/simulation.lua")?;
+
     while app_clone.lock().unwrap().running {
+        // Example call later:
+        let func: mlua::Function = lua_app.current_simulation.globals().get("Simulate")?;
+
+        let particles: Vec<Vec<f64>> =
+            func.call((app_clone.lock().unwrap().particles.clone(), "nil"))?;
+        app_clone.lock().unwrap().particles = particles;
         // Draw the particles
         tui_clone
             .lock()

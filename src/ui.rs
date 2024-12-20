@@ -4,19 +4,16 @@ use ratatui::{
     Frame,
 };
 
-use crate::{
-    app::{App, CurrentScreen},
-    simulations::{fire, noise},
-};
+use crate::app::App;
+
+// pub fn render(f: &mut Frame, app: &mut App) {
+// match app.current_screen {
+//     CurrentScreen::Noise => noise::draw_noise(f, app),
+//     CurrentScreen::Fire => fire::draw_fire(f, app),
+// }
+// }
 
 pub fn render(f: &mut Frame, app: &mut App) {
-    match app.current_screen {
-        CurrentScreen::Noise => noise::draw_noise(f, app),
-        CurrentScreen::Fire => fire::draw_fire(f, app),
-    }
-}
-
-pub fn update(f: &mut Frame, app: &mut App) {
     let f_area = f.area();
     f.render_widget(Clear, f_area); //this clears the entire screen and anything already drawn
 
@@ -37,17 +34,17 @@ pub fn update(f: &mut Frame, app: &mut App) {
 
     f.render_widget(particles, f_area);
 
-    if app.show_info {
-        draw_info(f, app)
-    }
+    // if app.show_info {
+    //     draw_info(f, app)
+    // }
 }
 
-fn draw_info(f: &mut Frame, app: &mut App) {
-    match app.current_screen {
-        CurrentScreen::Noise => noise::draw_info(f, app),
-        CurrentScreen::Fire => fire::draw_info(f, app),
-    }
-}
+// fn draw_info(f: &mut Frame, app: &mut App) {
+// match app.current_screen {
+//     CurrentScreen::Noise => noise::draw_info(f, app),
+//     CurrentScreen::Fire => fire::draw_info(f, app),
+// }
+// }
 
 pub fn centered_area(width: usize, height: usize, area: Rect) -> Rect {
     let x = (area.width.saturating_sub(width as u16)) / 2;
