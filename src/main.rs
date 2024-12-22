@@ -6,6 +6,7 @@ mod ui;
 use app::{App, AppResult, LuaApp};
 use crossterm::event::{self, Event};
 use handler::handle_key_events;
+use mlua::ObjectLike;
 use ratatui::prelude::*;
 use std::{
     io,
@@ -58,13 +59,18 @@ fn main() -> AppResult<()> {
 
     let mut lua_app = LuaApp::new();
     lua_app.load_simulation("src/simulations_lua/noise/simulation.lua")?;
+    // Assuming you have a class instance in Lua called 'simulation'
+    let instance: mlua::Table = lua_app.current_simulation.globals().get("Simulation")?;
+
+    // Call methods on the instance
+    let init_func: mlua::Function = instance.get("setup")?;
+    let simulation: mlua::Table = init_func.call(())?;
+
+    simulation.call_method("set_particles", app_clone.lock().unwrap().particles.clone())?;
 
     while app_clone.lock().unwrap().running {
         // Example call later:
-        let func: mlua::Function = lua_app.current_simulation.globals().get("Simulate")?;
-
-        let particles: Vec<Vec<f64>> =
-            func.call((app_clone.lock().unwrap().particles.clone(), "nil"))?;
+        let particles: Vec<Vec<f64>> = simulation.call_method("simulate", ())?;
         app_clone.lock().unwrap().particles = particles;
         // Draw the particles
         tui_clone

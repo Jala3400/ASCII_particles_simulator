@@ -1,28 +1,28 @@
-Particles = { {} }
-Params = {
-    noise_intensity = 1,
-    min_brightness = 0.0,
-    max_brightness = 1.0,
-}
+Simulation = {}
+Simulation.__index = Simulation
 
-function Simulate(particles, params)
-    -- Default parameters if not provided
-    params = params or {
+function Simulation.setup()
+    local self = setmetatable({}, Simulation)
+    self.particles = { {} }
+    self.params = {
         noise_intensity = 1,
         min_brightness = 0.0,
         max_brightness = 1.0,
     }
+    return self
+end
 
-    local noise_intensity = 1
-    local min_brightness = 0.0
-    local max_brightness = 1.0
+function Simulation:simulate()
+    local noise_intensity = self.params.noise_intensity
+    local min_brightness = self.params.min_brightness
+    local max_brightness = self.params.max_brightness
 
     local result = {}
 
     -- Initialize result array with same dimensions
-    for i = 1, #particles do
+    for i = 1, #self.particles do
         result[i] = {}
-        for j = 1, #particles[1] do
+        for j = 1, #self.particles[1] do
             local particle_brightness = (min_brightness + math.random() *
                 (max_brightness - min_brightness)) * noise_intensity
 
@@ -31,6 +31,22 @@ function Simulate(particles, params)
     end
 
     return result
+end
+
+function Simulation:set_particles(particles)
+    self.particles = particles or self.particles
+end
+
+function Simulation:get_particles()
+    return self.particles
+end
+
+function Simulation:set_params(params)
+    self.params = params or self.params
+end
+
+function Simulation:get_params()
+    return self.params
 end
 
 -- fn handle_noise_key(key: KeyEvent, app: &mut App) {
