@@ -20,6 +20,21 @@ fn main() -> AppResult<()> {
     // Create an application.
     let app = Arc::new(Mutex::new(App::new()));
 
+    // Get all simulation files from the simulations directory
+    let simulation_files = std::fs::read_dir("src/simulations_lua")?
+        .filter_map(|entry| entry.ok())
+        .filter_map(|entry| {
+            let path = entry.path();
+            if path.is_dir() {
+                Some(path.join("simulation.lua").to_str()?.to_string())
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<String>>();
+
+    app.lock().unwrap().possible_simulations = simulation_files;
+
     // Initialize the terminal user interface.
     let backend = CrosstermBackend::new(io::stdout());
     let terminal = Terminal::new(backend)?;
@@ -58,25 +73,55 @@ fn main() -> AppResult<()> {
     });
 
     let mut lua_app = LuaApp::new();
-    lua_app.load_simulation("src/simulations_lua/noise/simulation.lua")?;
-    // Assuming you have a class instance in Lua called 'simulation'
-    let instance: mlua::Table = lua_app.current_simulation.globals().get("Simulation")?;
-
-    // Call methods on the instance
-    let init_func: mlua::Function = instance.get("setup")?;
-    let simulation: mlua::Table = init_func.call(())?;
-
-    simulation.call_method("set_particles", app_clone.lock().unwrap().particles.clone())?;
+    lua_app.load_simulation(
+        // app_clone
+        //     .lock()
+        //     .unwrap()
+        //     .possible_simulations
+        //     .get(app_clone.lock().unwrap().current_simulation_idx)
+        //     .unwrap(),
+        "src/simulations_lua/fire/simulation.lua",
+        app_clone.lock().unwrap().particles.clone(),
+    )?;
 
     while app_clone.lock().unwrap().running {
+        let (current_simulation_idx, particles) = {
+            let app_guard = app_clone.lock().unwrap();
+            (
+                app_guard.current_simulation_idx,
+                app_guard.particles.clone(),
+            )
+        };
+        if current_simulation_idx != lua_app.current_simulation_idx {
+            let simulation_path = {
+                let app_guard = app_clone.lock().unwrap();
+                app_guard
+                    .possible_simulations
+                    .get(current_simulation_idx)
+                    .unwrap()
+                    .clone()
+            };
+            lua_app.switch_simulation(simulation_path, current_simulation_idx, particles)?;
+        }
+
         // Example call later:
+        let simulation = lua_app.simulation_instance.as_ref().unwrap();
         let particles: Vec<Vec<f64>> = simulation.call_method("simulate", ())?;
-        app_clone.lock().unwrap().particles = particles;
+
+        {
+            let mut app_guard = app_clone.lock().unwrap();
+            app_guard.particles = particles;
+        }
+
         // Draw the particles
-        tui_clone
-            .lock()
-            .unwrap()
-            .draw(&mut app_clone.lock().unwrap())?;
+        {
+            let mut app_guard = app_clone.lock().unwrap();
+            tui_clone
+                .lock()
+                .unwrap()
+                .draw(&mut app_guard)
+                .expect("Failed to draw UI");
+        }
 
         // Sleep for a short period to control the simulation speed
         thread::sleep(Duration::from_millis(250));

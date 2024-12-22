@@ -11,8 +11,12 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) {
         Char('q') => app.quit(),
         // Char('n') => app.current_screen = CurrentScreen::Noise,
         // Char('f') => app.current_screen = CurrentScreen::Fire,
-        Char('i') => app.show_info = !app.show_info,
+        // Char('i') => app.show_info = !app.show_info,
         Tab => {
+            app.current_simulation_idx =
+                (app.current_simulation_idx + 1) % app.possible_simulations.len();
+        }
+        Enter => {
             app.particles_index = (app.particles_index + 1) % app.particles_styles.len();
         }
         _ => {
