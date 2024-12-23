@@ -5,20 +5,15 @@ mod tui;
 mod ui;
 use app::{App, AppResult, LuaApp};
 use crossterm::event::{self, Event};
-use handler::{handle_key_events, handle_static_key_events};
+use handler::handle_key_events;
 use mlua::ObjectLike;
 use ratatui::prelude::*;
-use std::{
-    io,
-    sync::{Arc, Mutex},
-    thread,
-    time::Duration,
-};
+use std::{io, time::Duration};
 use tui::Tui;
 
 fn main() -> AppResult<()> {
     // Create an application.
-    let app = Arc::new(Mutex::new(App::new()));
+    let mut app = App::new();
 
     // Get all simulation files from the simulations directory
     let simulation_files = std::fs::read_dir("src/simulations_lua")?
@@ -33,7 +28,7 @@ fn main() -> AppResult<()> {
         })
         .collect::<Vec<String>>();
 
-    app.lock().unwrap().possible_simulations = simulation_files;
+    app.possible_simulations = simulation_files;
 
     // Initialize the terminal user interface.
     let backend = CrosstermBackend::new(io::stdout());
@@ -43,108 +38,73 @@ fn main() -> AppResult<()> {
     let terminal_size = terminal.size()?;
     let screen_width = terminal_size.width as usize;
     let screen_height = terminal_size.height as usize;
-    app.lock()
-        .unwrap()
-        .change_dimensions(screen_width, screen_height);
+    app.change_dimensions(screen_width, screen_height);
 
-    let tui = Arc::new(Mutex::new(Tui::new(terminal)));
-    tui.lock().unwrap().init()?;
-
-    let app_clone = Arc::clone(&app);
-    let tui_clone = Arc::clone(&tui);
-
-    // Create a channel for sending events
-    let (tx, rx) = std::sync::mpsc::channel();
-
-    // Spawn a thread for handling input
-    thread::spawn(move || {
-        while app.lock().unwrap().running {
-            if let Ok(event) = event::read() {
-                let mut app_guard = app.lock().unwrap();
-                match event {
-                    Event::Key(event) => {
-                        handle_static_key_events(event, &mut app_guard);
-                    }
-                    _ => {}
-                }
-                tui.lock()
-                    .unwrap()
-                    .draw(&mut app_guard)
-                    .expect("Failed to draw UI");
-                tx.send(event).unwrap();
-            }
-        }
-    });
+    let mut tui = Tui::new(terminal);
+    tui.init()?;
 
     let mut lua_app = LuaApp::new();
+
     // Set up the initial simulation
-    {
-        let mut app_guard = app_clone.lock().unwrap();
+    let noise_idx = app
+        .possible_simulations
+        .iter()
+        .position(|x| x.contains("noise"))
+        .unwrap_or(0);
+    lua_app.current_simulation_idx = noise_idx;
+    app.current_simulation_idx = noise_idx;
+    lua_app.load_simulation(&mut app)?;
 
-        let noise_idx = app_guard
-            .possible_simulations
-            .iter()
-            .position(|x| x.contains("noise"))
-            .unwrap_or(0);
-        lua_app.current_simulation_idx = noise_idx;
-        app_guard.current_simulation_idx = noise_idx;
-        lua_app.load_simulation(&mut app_guard)?;
-    }
-
-    while app_clone.lock().unwrap().running {
+    while app.running {
         let simulation = lua_app.simulation_instance.as_ref().unwrap();
 
         // Check if the terminal size has changed
-        {
-            let mut app_guard = app_clone.lock().unwrap();
-            let current_height = app_guard.particles.len();
-            let current_width = app_guard.particles[0].len();
 
-            let tui_guard = tui_clone.lock().unwrap();
-            let terminal_size = tui_guard.terminal.size()?;
-            let width = terminal_size.width as usize;
-            let height = terminal_size.height as usize;
-            if width != current_width || height != current_height {
-                app_guard.change_dimensions(width as usize, height as usize);
-                simulation.call_method("set_particles", app_guard.particles.clone())?;
-            }
+        let current_height = app.particles.len();
+        let current_width = app.particles[0].len();
+
+        let terminal_size = tui.terminal.size()?;
+        let width = terminal_size.width as usize;
+        let height = terminal_size.height as usize;
+        if width != current_width || height != current_height {
+            app.change_dimensions(width as usize, height as usize);
+            simulation.call_method("set_particles", app.particles.clone())?;
         }
 
         // Get the new particles
         let particles: Vec<Vec<f64>> = simulation.call_method("simulate", ())?;
         // Updates the particles
-        {
-            let mut app_guard = app_clone.lock().unwrap();
-            app_guard.particles = particles;
-        }
+
+        app.particles = particles;
 
         // Draw the particles
-        {
-            let mut app_guard = app_clone.lock().unwrap();
-            tui_clone
-                .lock()
-                .unwrap()
-                .draw(&mut app_guard)
-                .expect("Failed to draw UI");
-        }
 
-        // Sleep for a short period to control the simulation speed
-        thread::sleep(Duration::from_millis(250));
+        tui.draw(&mut app).expect("Failed to draw UI");
 
-        // Handle events
-        // It is done here to exit the loop if the user presses 'q' without needing to wait for the next frame
-        while let Ok(event) = rx.try_recv() {
-            let mut app_guard = app_clone.lock().unwrap();
-            match event {
-                Event::Key(event) => {
-                    handle_key_events(event, &mut app_guard, &mut lua_app)?;
+        let frame_duration = Duration::from_millis(250);
+        let frame_start = std::time::Instant::now();
+
+        let remaining_time = frame_duration
+            .checked_sub(frame_start.elapsed())
+            .unwrap_or(Duration::from_millis(0));
+
+        // Handle events until the frame duration is up
+        while frame_start.elapsed() < frame_duration {
+            if event::poll(remaining_time)? {
+                let event = event::read()?;
+                match event {
+                    Event::Key(event) => {
+                        handle_key_events(event, &mut app, &mut lua_app)?;
+                    }
+                    _ => {}
                 }
-                _ => {}
+                tui.draw(&mut app).expect("Failed to draw UI");
+                // tx.send(event).unwrap();
             }
         }
     }
 
     // Exit the user interface.
-    tui_clone.lock().unwrap().exit()?;
+    tui.exit()?;
     Ok(())
 }
