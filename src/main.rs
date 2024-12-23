@@ -73,39 +73,36 @@ fn main() -> AppResult<()> {
     });
 
     let mut lua_app = LuaApp::new();
-    let possible_simulations = app_clone.lock().unwrap().possible_simulations.clone();
-    let current_simulation_idx = app_clone.lock().unwrap().current_simulation_idx;
-    lua_app.load_simulation(
-        possible_simulations.get(current_simulation_idx).unwrap(),
-        app_clone.lock().unwrap().particles.clone(),
-    )?;
+    // Set up the initial simulation
+    {
+        let mut app_guard = app_clone.lock().unwrap();
+
+        let noise_idx = app_guard
+            .possible_simulations
+            .iter()
+            .position(|x| x.contains("noise"))
+            .unwrap_or(0);
+        lua_app.current_simulation_idx = noise_idx;
+        app_guard.current_simulation_idx = noise_idx;
+        lua_app.load_simulation(&mut app_guard)?;
+    }
 
     while app_clone.lock().unwrap().running {
-        // Check if the simulation has changed
-        let (current_simulation_idx, particles) = {
+        let current_simulation_idx = {
             let app_guard = app_clone.lock().unwrap();
-            (
-                app_guard.current_simulation_idx,
-                app_guard.particles.clone(),
-            )
+            app_guard.current_simulation_idx
         };
 
         // If the simulation has changed, load the new simulation
         if current_simulation_idx != lua_app.current_simulation_idx {
-            let simulation_path = {
-                let app_guard = app_clone.lock().unwrap();
-                app_guard
-                    .possible_simulations
-                    .get(current_simulation_idx)
-                    .unwrap()
-                    .clone()
-            };
-            lua_app.switch_simulation(simulation_path, current_simulation_idx, particles)?;
+            let mut app_guard = app_clone.lock().unwrap();
+            lua_app.switch_simulation(&mut app_guard)?;
         }
 
         let simulation = lua_app.simulation_instance.as_ref().unwrap();
 
         {
+            // Check if the terminal size has changed
             let tui_guard = tui_clone.lock().unwrap();
             let terminal_size = tui_guard.terminal.size()?;
             let width = terminal_size.width as usize;
