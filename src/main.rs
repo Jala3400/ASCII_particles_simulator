@@ -73,18 +73,15 @@ fn main() -> AppResult<()> {
     });
 
     let mut lua_app = LuaApp::new();
+    let possible_simulations = app_clone.lock().unwrap().possible_simulations.clone();
+    let current_simulation_idx = app_clone.lock().unwrap().current_simulation_idx;
     lua_app.load_simulation(
-        // app_clone
-        //     .lock()
-        //     .unwrap()
-        //     .possible_simulations
-        //     .get(app_clone.lock().unwrap().current_simulation_idx)
-        //     .unwrap(),
-        "src/simulations_lua/fire/simulation.lua",
+        possible_simulations.get(current_simulation_idx).unwrap(),
         app_clone.lock().unwrap().particles.clone(),
     )?;
 
     while app_clone.lock().unwrap().running {
+        // Check if the simulation has changed
         let (current_simulation_idx, particles) = {
             let app_guard = app_clone.lock().unwrap();
             (
@@ -92,6 +89,8 @@ fn main() -> AppResult<()> {
                 app_guard.particles.clone(),
             )
         };
+
+        // If the simulation has changed, load the new simulation
         if current_simulation_idx != lua_app.current_simulation_idx {
             let simulation_path = {
                 let app_guard = app_clone.lock().unwrap();
@@ -104,17 +103,34 @@ fn main() -> AppResult<()> {
             lua_app.switch_simulation(simulation_path, current_simulation_idx, particles)?;
         }
 
-        // Example call later:
         let simulation = lua_app.simulation_instance.as_ref().unwrap();
+
+        {
+            let tui_guard = tui_clone.lock().unwrap();
+            let terminal_size = tui_guard.terminal.size()?;
+            let width = terminal_size.width as usize;
+            let height = terminal_size.height as usize;
+
+            let mut app_guard = app_clone.lock().unwrap();
+            let current_height = app_guard.particles.len();
+            let current_width = app_guard.particles[0].len();
+            if width != current_width || height != current_height {
+                app_guard.change_dimensions(width as usize, height as usize);
+                simulation.call_method("set_particles", app_guard.particles.clone())?;
+            }
+        }
+
+        // Get the new particles
         let particles: Vec<Vec<f64>> = simulation.call_method("simulate", ())?;
 
         {
+            // Updates the particles
             let mut app_guard = app_clone.lock().unwrap();
             app_guard.particles = particles;
         }
 
-        // Draw the particles
         {
+            // Draw the particles
             let mut app_guard = app_clone.lock().unwrap();
             tui_clone
                 .lock()
