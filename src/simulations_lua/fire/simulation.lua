@@ -62,39 +62,27 @@ function Simulation:get_params()
     return self.params
 end
 
--- fn handle_key(key: KeyEvent, app: &mut App) {
---     use KeyCode::*;
---     match key.code {
---         Char('+') => {
---             app.fire_data.noise_intensity += 0.01;
---         }
---         Char('-') => {
---             app.fire_data.noise_intensity -= 0.01;
---         }
---         Up => {
---             app.fire_data.below_intensity += 0.01;
---         }
---         Down => {
---             app.fire_data.below_intensity -= 0.01;
---         }
---         Right => {
---             app.fire_data.past_intensity += 0.01;
---         }
---         Left => {
---             app.fire_data.past_intensity -= 0.01;
---         }
---         Char('.') => {
---             app.fire_data.fire_intensity += 0.01;
---         }
---         Char(',') => {
---             app.fire_data.fire_intensity -= 0.01;
---         }
---         Char('r') => {
---             let new_fire_data = FireData::new();
---             app.fire_data = new_fire_data;
---         }
---         _ => {
---             app.show_info = false;
---         }
---     }
--- }
+function Simulation:handle_key_events(key)
+    local key = key.code
+
+    local key_actions = {
+        ['+'] = function() self.params.noise_intensity = self.params.noise_intensity + 0.01 end,
+        ['-'] = function() self.params.noise_intensity = self.params.noise_intensity - 0.01 end,
+        ['Up'] = function() self.params.below_intensity = self.params.below_intensity + 0.01 end,
+        ['Down'] = function() self.params.below_intensity = self.params.below_intensity - 0.01 end,
+        ['Right'] = function() self.params.past_intensity = self.params.past_intensity + 0.01 end,
+        ['Left'] = function() self.params.past_intensity = self.params.past_intensity - 0.01 end,
+        ['.'] = function() self.params.fire_intensity = self.params.fire_intensity + 0.01 end,
+        [','] = function() self.params.fire_intensity = self.params.fire_intensity - 0.01 end,
+        ['r'] = function()
+            self.params = {
+                noise_intensity = 0.07,
+                fire_intensity = 1.0,
+                past_intensity = 0.25,
+                below_intensity = 0.70
+            }
+        end
+    }
+
+    if key_actions[key] then key_actions[key]() end
+end

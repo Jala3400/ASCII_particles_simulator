@@ -27,7 +27,7 @@ pub fn handle_key_events(
             lua_app.switch_simulation(app)?;
         }
         _ => {
-            app.show_info = false;
+            lua_app.handle_key_events(key_event, app)?;
         }
     }
 

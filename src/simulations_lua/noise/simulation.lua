@@ -49,42 +49,40 @@ function Simulation:get_params()
     return self.params
 end
 
--- fn handle_noise_key(key: KeyEvent, app: &mut App) {
---     use KeyCode::*;
---     match key.code {
---         Char('+') => {
---             app.noise_data.noise_intensity += 0.1;
---         }
---         Char('-') => {
---             app.noise_data.noise_intensity -= 0.1;
---         }
---         Up => {
---             app.noise_data.min_brightness += 0.1;
---             app.noise_data.max_brightness += 0.1;
---         }
---         Down => {
---             app.noise_data.min_brightness -= 0.1;
---             app.noise_data.max_brightness -= 0.1;
---         }
---         Right => {
---             app.noise_data.min_brightness -= 0.1;
---             app.noise_data.max_brightness += 0.1;
---         }
---         Left => {
---             app.noise_data.min_brightness += 0.1;
---             app.noise_data.max_brightness -= 0.1;
---             if app.noise_data.min_brightness > app.noise_data.max_brightness {
---                 let tmp = app.noise_data.min_brightness;
---                 app.noise_data.min_brightness = app.noise_data.max_brightness;
---                 app.noise_data.max_brightness = tmp;
---             }
---         }
---         Char('r') => {
---             let new_noise_info = NoiseData::new();
---             app.noise_data = new_noise_info;
---         }
---         _ => {
---             app.show_info = false;
---         }
---     }
--- }
+function Simulation:handle_key_events(key_event)
+    local key = key_event.code
+    -- Key mapping table for parameter adjustments
+    local key_actions = {
+        ['+'] = function() self.params.noise_intensity = self.params.noise_intensity + 0.1 end,
+        ['-'] = function() self.params.noise_intensity = self.params.noise_intensity - 0.1 end,
+        ['Up'] = function() 
+            self.params.min_brightness = self.params.min_brightness + 0.1
+            self.params.max_brightness = self.params.max_brightness + 0.1
+        end,
+        ['Down'] = function()
+            self.params.min_brightness = self.params.min_brightness - 0.1
+            self.params.max_brightness = self.params.max_brightness - 0.1
+        end,
+        ['Right'] = function()
+            self.params.min_brightness = self.params.min_brightness - 0.1
+            self.params.max_brightness = self.params.max_brightness + 0.1
+        end,
+        ['Left'] = function()
+            self.params.min_brightness = self.params.min_brightness + 0.1
+            self.params.max_brightness = self.params.max_brightness - 0.1
+            if self.params.min_brightness > self.params.max_brightness then
+                self.params.min_brightness, self.params.max_brightness = 
+                    self.params.max_brightness, self.params.min_brightness
+            end
+        end,
+        ['r'] = function()
+            self.params = {
+                noise_intensity = 1,
+                min_brightness = 0.0,
+                max_brightness = 1.0,
+            }
+        end
+    }
+
+    if key_actions[key] then key_actions[key]() end
+end

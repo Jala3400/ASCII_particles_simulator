@@ -1,3 +1,4 @@
+use crossterm::event::KeyEvent;
 use mlua::{Lua, ObjectLike};
 use std::{collections::HashMap, error};
 
@@ -80,6 +81,32 @@ impl LuaApp {
         self.current_simulation = Lua::new();
         self.current_simulation_idx = idx;
         self.load_simulation(app)?;
+        Ok(())
+    }
+
+    pub fn handle_key_events(&mut self, key_event: KeyEvent, app: &mut App) -> AppResult<()> {
+        let lua = &self.current_simulation;
+        let key = match key_event.code {
+            crossterm::event::KeyCode::Char(c) => c.to_string(),
+            _ => format!("{:?}", key_event.code),
+        };
+
+        let key_table = lua.create_table()?;
+        key_table.set("code", format!("{}", key))?;
+        key_table.set("modifiers", format!("{:?}", key_event.modifiers))?;
+        key_table.set("kind", format!("{:?}", key_event.kind))?;
+
+        self.simulation_instance
+            .as_ref()
+            .unwrap()
+            .call_method("handle_key_events", key_table)?;
+
+        app.current_params = self
+            .simulation_instance
+            .as_ref()
+            .unwrap()
+            .call_method("get_params", ())?;
+
         Ok(())
     }
 }
