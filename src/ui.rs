@@ -1,6 +1,6 @@
 use ratatui::{
     layout::Rect,
-    widgets::{Clear, Paragraph},
+    widgets::{Block, BorderType, Borders, Clear, Paragraph},
     Frame,
 };
 
@@ -34,17 +34,25 @@ pub fn render(f: &mut Frame, app: &mut App) {
 
     f.render_widget(particles, f_area);
 
-    // if app.show_info {
-    //     draw_info(f, app)
-    // }
+    if app.show_info {
+        draw_info(f, app)
+    }
 }
 
-// fn draw_info(f: &mut Frame, app: &mut App) {
-// match app.current_screen {
-//     CurrentScreen::Noise => noise::draw_info(f, app),
-//     CurrentScreen::Fire => fire::draw_info(f, app),
-// }
-// }
+fn draw_info(f: &mut Frame, app: &mut App) {
+    let info_str = format!(
+        "{}\n",
+        app.current_params
+            .iter()
+            .map(|(k, v)| format!(" {}: {}", k, v))
+            .collect::<Vec<_>>()
+            .join("\n")
+    );
+    let area = centered_area(50, app.current_params.len() + 2, f.area());
+    let info = Paragraph::new(info_str).block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded));
+    f.render_widget(Clear, area);
+    f.render_widget(info, area);
+}
 
 pub fn centered_area(width: usize, height: usize, area: Rect) -> Rect {
     let x = (area.width.saturating_sub(width as u16)) / 2;
