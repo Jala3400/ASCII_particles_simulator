@@ -53,21 +53,14 @@ fn main() -> AppResult<()> {
     let app_clone = Arc::clone(&app);
     let tui_clone = Arc::clone(&tui);
 
+    // Create a channel for sending events
+    let (tx, rx) = std::sync::mpsc::channel();
+
     // Spawn a thread for handling input
     thread::spawn(move || {
         while app.lock().unwrap().running {
             if let Ok(event) = event::read() {
-                match event {
-                    Event::Key(event) => {
-                        let mut app_lock = app.lock().unwrap();
-                        handle_key_events(event, &mut app_lock);
-                        tui.lock().unwrap().draw(&mut app_lock).unwrap();
-                    }
-                    Event::Resize(_, _) => {
-                        tui.lock().unwrap().draw(&mut app.lock().unwrap()).unwrap();
-                    }
-                    _ => {}
-                }
+                tx.send(event).unwrap();
             }
         }
     });
@@ -88,17 +81,6 @@ fn main() -> AppResult<()> {
     }
 
     while app_clone.lock().unwrap().running {
-        let current_simulation_idx = {
-            let app_guard = app_clone.lock().unwrap();
-            app_guard.current_simulation_idx
-        };
-
-        // If the simulation has changed, load the new simulation
-        if current_simulation_idx != lua_app.current_simulation_idx {
-            let mut app_guard = app_clone.lock().unwrap();
-            lua_app.switch_simulation(&mut app_guard)?;
-        }
-
         let simulation = lua_app.simulation_instance.as_ref().unwrap();
 
         {
@@ -119,7 +101,6 @@ fn main() -> AppResult<()> {
 
         // Get the new particles
         let particles: Vec<Vec<f64>> = simulation.call_method("simulate", ())?;
-
         {
             // Updates the particles
             let mut app_guard = app_clone.lock().unwrap();
@@ -138,7 +119,20 @@ fn main() -> AppResult<()> {
 
         // Sleep for a short period to control the simulation speed
         thread::sleep(Duration::from_millis(250));
+
+        // Handle events
+        // It is done here to exit the loop if the user presses 'q' without needing to wait for the next frame
+        while let Ok(event) = rx.try_recv() {
+            let mut app_guard = app_clone.lock().unwrap();
+            match event {
+                Event::Key(event) => {
+                    handle_key_events(event, &mut app_guard, &mut lua_app)?;
+                }
+                _ => {}
+            }
+        }
     }
+
     // Exit the user interface.
     tui_clone.lock().unwrap().exit()?;
     Ok(())

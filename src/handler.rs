@@ -1,10 +1,14 @@
 use crossterm::event::{self, KeyCode, KeyEvent};
 
-use crate::app::App;
+use crate::app::{App, AppResult, LuaApp};
 
-pub fn handle_key_events(key_event: KeyEvent, app: &mut App) {
+pub fn handle_key_events(
+    key_event: KeyEvent,
+    mut app: &mut App,
+    lua_app: &mut LuaApp,
+) -> AppResult<()> {
     if key_event.kind == event::KeyEventKind::Release {
-        return;
+        return Ok(());
     }
     use KeyCode::*;
     match key_event.code {
@@ -15,6 +19,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) {
         Tab => {
             app.current_simulation_idx =
                 (app.current_simulation_idx + 1) % app.possible_simulations.len();
+            lua_app.switch_simulation(&mut app)?;
         }
         Enter => {
             app.particles_index = (app.particles_index + 1) % app.particles_styles.len();
@@ -29,4 +34,5 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) {
     }
 
     app.show_info = false;
+    Ok(())
 }
