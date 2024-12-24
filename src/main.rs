@@ -119,7 +119,7 @@ fn check_size(
     let height = terminal_size.height as usize;
     if width != current_width || height != current_height {
         app.change_dimensions(width as usize, height as usize);
-        simulation.call_method("set_particles", app.particles.clone())?;
+        let _: () = simulation.call_method("set_particles", app.particles.clone())?;
     }
 
     Ok(())

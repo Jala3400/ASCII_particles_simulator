@@ -58,7 +58,8 @@ impl LuaSim {
         key_table.set("modifiers", format!("{:?}", key_event.modifiers))?;
         key_table.set("kind", format!("{:?}", key_event.kind))?;
 
-        self.simulation_instance
+        let _: () = self
+            .simulation_instance
             .as_ref()
             .unwrap()
             .call_method("handle_key_events", key_table)?;
