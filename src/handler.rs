@@ -1,11 +1,11 @@
 use crossterm::event::{self, KeyCode, KeyEvent};
 
-use crate::app::{App, AppResult, LuaApp};
+use crate::{app::{App, AppResult}, lua_sim::LuaSim};
 
 pub fn handle_key_events(
     key_event: KeyEvent,
     app: &mut App,
-    lua_app: &mut LuaApp,
+    lua_app: &mut LuaSim,
 ) -> AppResult<()> {
     if key_event.kind == event::KeyEventKind::Release {
         return Ok(());

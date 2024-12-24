@@ -3,16 +3,6 @@
 version = 3
 
 [[package]]
-name = "ASCII_particles_simulator"
-version = "0.1.0"
-dependencies = [
- "crossterm",
- "mlua",
- "rand",
- "ratatui",
-]
-
-[[package]]
 name = "ahash"
 version = "0.8.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -29,6 +19,16 @@ name = "allocator-api2"
 version = "0.2.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5c6cb57a04249c6480766f7f7cef5467412af1490f8d1e243141daddada3264f"
+
+[[package]]
+name = "ascii_particles_simulator"
+version = "0.1.0"
+dependencies = [
+ "crossterm",
+ "mlua",
+ "rand",
+ "ratatui",
+]
 
 [[package]]
 name = "autocfg"
