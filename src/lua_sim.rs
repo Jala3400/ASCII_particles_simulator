@@ -55,7 +55,7 @@ impl LuaSim {
 
         let key_table = lua.create_table()?;
         key_table.set("code", format!("{}", key))?;
-        key_table.set("modifiers", format!("{:?}", key_event.modifiers))?;
+        key_table.set("modifiers", format!("{}", key_event.modifiers))?;
         key_table.set("kind", format!("{:?}", key_event.kind))?;
 
         let _: () = self
