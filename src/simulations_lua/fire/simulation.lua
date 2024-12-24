@@ -4,6 +4,7 @@ Simulation.__index = Simulation
 function Simulation.setup()
     local self = setmetatable({}, Simulation)
     self.particles = { {} }
+    self.textures = { { ' ', '·', '+', '#' }, { ' ', '.', 'o', '@' } }
     self.params = {
         noise_intensity = 0.07,
         fire_intensity = 1.0,
@@ -65,6 +66,14 @@ function Simulation:get_params()
         { name = "past_intensity",  value = self.params.past_intensity },
         { name = "below_intensity", value = self.params.below_intensity }
     }
+end
+
+function Simulation:set_textures(textures)
+    self.textures = textures or self.textures
+end
+
+function Simulation:get_textures()
+    return self.textures
 end
 
 function Simulation:handle_key_events(key)

@@ -19,7 +19,7 @@ pub fn handle_key_events(
             app.show_info = !app.show_info;
         }
         Enter => {
-            app.particles_index = (app.particles_index + 1) % app.particles_styles.len();
+            app.texture_index = (app.texture_index + 1) % app.textures.len();
         }
         Tab => {
             app.current_simulation_idx =

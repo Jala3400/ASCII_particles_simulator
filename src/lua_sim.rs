@@ -30,9 +30,12 @@ impl LuaSim {
         // Call methods on the instance
         let init_func: mlua::Function = instance.get("setup")?;
         let sim: mlua::Table = init_func.call(())?;
+
         sim.call_method("set_particles", particles)?;
-        app.current_params = sim.get("params")?;
+
         self.simulation_instance = Some(sim);
+
+        self.update_all_params(app)?;
 
         Ok(())
     }
@@ -62,11 +65,22 @@ impl LuaSim {
             .unwrap()
             .call_method("handle_key_events", key_table)?;
 
-        let params_array: mlua::Table = self
-            .simulation_instance
-            .as_ref()
-            .unwrap()
-            .call_method("get_params", ())?;
+        self.update_all_params(app)?;
+
+        Ok(())
+    }
+
+    pub fn update_all_params(&mut self, app: &mut App) -> AppResult<()> {
+        self.update_params(app)?;
+        self.update_textures(app)?;
+        Ok(())
+    }
+
+    pub fn update_params(&mut self, app: &mut App) -> AppResult<()> {
+        let sim = self.simulation_instance.as_ref().unwrap();
+
+        // get params
+        let params_array: mlua::Table = sim.call_method("get_params", ())?;
 
         app.current_params.clear();
         for pair in params_array.pairs::<i32, mlua::Table>() {
@@ -75,7 +89,19 @@ impl LuaSim {
             let value: f64 = param.get("value")?;
             app.current_params.insert(name, value);
         }
+        Ok(())
+    }
 
+    pub fn update_textures(&mut self, app: &mut App) -> AppResult<()> {
+        let sim = self.simulation_instance.as_ref().unwrap();
+
+        // get textures
+        let styles: Vec<Vec<String>> = sim.call_method("get_textures", ())?;
+
+        app.textures = styles
+            .iter()
+            .map(|style| style.iter().map(|s| s.chars().next().unwrap()).collect())
+            .collect();
         Ok(())
     }
 }
