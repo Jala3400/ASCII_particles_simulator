@@ -1,9 +1,9 @@
 Simulation = {}
 Simulation.__index = Simulation
 
-function Simulation.setup()
+function Simulation.setup(particles)
     local self = setmetatable({}, Simulation)
-    self.particles = { {} }
+    self.particles = particles
     self.textures = { { ' ', '·', '+', '#' }, { ' ', '.', 'o', '@' } }
     self.params = {
         noise_intensity = 1,

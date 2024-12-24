@@ -29,9 +29,7 @@ impl LuaSim {
 
         // Call methods on the instance
         let init_func: mlua::Function = instance.get("setup")?;
-        let sim: mlua::Table = init_func.call(())?;
-
-        sim.call_method("set_particles", particles)?;
+        let sim: mlua::Table = init_func.call(particles)?;
 
         self.simulation_instance = Some(sim);
 

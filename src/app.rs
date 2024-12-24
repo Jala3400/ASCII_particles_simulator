@@ -19,7 +19,7 @@ impl App {
     pub fn new() -> Self {
         App {
             running: true,
-            particles: vec![vec![0.0; 100]; 100],
+            particles: vec![vec![0.0; 1]; 1],
             show_info: false,
             texture_index: 0,
             textures: vec![],
