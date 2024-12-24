@@ -76,7 +76,7 @@ fn main() -> AppResult<()> {
 
 fn load_files(app: &mut App) -> AppResult<()> {
     // Get all simulation files from the simulations directory
-    let simulation_files = std::fs::read_dir("src/simulations_lua")?
+    let simulation_files = std::fs::read_dir("simulations_lua")?
         .filter_map(|entry| entry.ok())
         .filter_map(|entry| {
             let path = entry.path();
