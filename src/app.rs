@@ -101,11 +101,19 @@ impl LuaApp {
             .unwrap()
             .call_method("handle_key_events", key_table)?;
 
-        app.current_params = self
+        let params_array: mlua::Table = self
             .simulation_instance
             .as_ref()
             .unwrap()
             .call_method("get_params", ())?;
+
+        app.current_params.clear();
+        for pair in params_array.pairs::<i32, mlua::Table>() {
+            let (_, param) = pair?;
+            let name: String = param.get("name")?;
+            let value: f64 = param.get("value")?;
+            app.current_params.insert(name, value);
+        }
 
         Ok(())
     }

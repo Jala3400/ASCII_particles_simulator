@@ -46,7 +46,11 @@ function Simulation:set_params(params)
 end
 
 function Simulation:get_params()
-    return self.params
+    return {
+        { name = "noise_intensity", value = self.params.noise_intensity },
+        { name = "min_brightness",  value = self.params.min_brightness },
+        { name = "max_brightness",  value = self.params.max_brightness }
+    }
 end
 
 function Simulation:handle_key_events(key_event)
@@ -55,7 +59,7 @@ function Simulation:handle_key_events(key_event)
     local key_actions = {
         ['+'] = function() self.params.noise_intensity = self.params.noise_intensity + 0.1 end,
         ['-'] = function() self.params.noise_intensity = self.params.noise_intensity - 0.1 end,
-        ['Up'] = function() 
+        ['Up'] = function()
             self.params.min_brightness = self.params.min_brightness + 0.1
             self.params.max_brightness = self.params.max_brightness + 0.1
         end,
@@ -71,7 +75,7 @@ function Simulation:handle_key_events(key_event)
             self.params.min_brightness = self.params.min_brightness + 0.1
             self.params.max_brightness = self.params.max_brightness - 0.1
             if self.params.min_brightness > self.params.max_brightness then
-                self.params.min_brightness, self.params.max_brightness = 
+                self.params.min_brightness, self.params.max_brightness =
                     self.params.max_brightness, self.params.min_brightness
             end
         end,

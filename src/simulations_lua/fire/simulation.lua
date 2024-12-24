@@ -59,7 +59,12 @@ function Simulation:set_params(params)
 end
 
 function Simulation:get_params()
-    return self.params
+    return {
+        { name = "noise_intensity", value = self.params.noise_intensity },
+        { name = "fire_intensity",  value = self.params.fire_intensity },
+        { name = "past_intensity",  value = self.params.past_intensity },
+        { name = "below_intensity", value = self.params.below_intensity }
+    }
 end
 
 function Simulation:handle_key_events(key)

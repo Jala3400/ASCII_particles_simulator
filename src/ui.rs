@@ -44,11 +44,15 @@ fn draw_info(f: &mut Frame, app: &mut App) {
         "{}\n",
         app.current_params
             .iter()
-            .map(|(k, v)| format!(" {}: {}", k, v))
+            .map(|(k, v)| format!(" {}: {:.02}", k, v))
             .collect::<Vec<_>>()
             .join("\n")
     );
-    let area = centered_area(50, app.current_params.len() + 2, f.area());
+    let max_width = f.area().width.saturating_sub(2);
+    let max_height = f.area().height.saturating_sub(2);
+    let width = max_width.min(50);
+    let height = max_height.min((app.current_params.len() + 2) as u16);
+    let area = centered_area(width as usize, height as usize, f.area());
     let info = Paragraph::new(info_str).block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded));
     f.render_widget(Clear, area);
     f.render_widget(info, area);
