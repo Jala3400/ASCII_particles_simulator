@@ -40,6 +40,7 @@ impl LuaSim {
 
     pub fn switch_simulation(&mut self, app: &mut App) -> AppResult<()> {
         let idx = app.current_simulation_idx;
+        app.texture_index = 0;
         self.current_simulation = Lua::new();
         self.current_simulation_idx = idx;
         self.load_simulation(app)?;
