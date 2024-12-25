@@ -4,6 +4,8 @@ Esta aplicación es un "simulador" de partículas en ASCII. Permite que simulaci
 
 Destaca por la capacidad de cambiar de simulación manteniendo las partículas de la anterior.
 
+https://github.com/user-attachments/assets/ab796276-0f07-45f6-aede-e27149bd4eb2
+
 ## Índice
 
 - [ASCII particles simulator](#ascii-particles-simulator)
