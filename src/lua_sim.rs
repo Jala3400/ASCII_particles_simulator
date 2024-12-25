@@ -55,7 +55,7 @@ impl LuaSim {
 
         let key_table = lua.create_table()?;
         key_table.set("code", format!("{}", key))?;
-        key_table.set("modifiers", format!("{}", key_event.modifiers))?;
+        key_table.set("modifiers", self.format_modifiers(key_event.modifiers)?)?;
         key_table.set("kind", format!("{:?}", key_event.kind))?;
 
         let _: () = self
@@ -67,6 +67,39 @@ impl LuaSim {
         self.update_all_params(app)?;
 
         Ok(())
+    }
+
+    fn format_modifiers(
+        &mut self,
+        modifiers: crossterm::event::KeyModifiers,
+    ) -> AppResult<mlua::Table> {
+        let lua = &self.current_simulation;
+        let mods = lua.create_table()?;
+        mods.set(
+            "shift",
+            modifiers.contains(crossterm::event::KeyModifiers::SHIFT),
+        )?;
+        mods.set(
+            "ctrl",
+            modifiers.contains(crossterm::event::KeyModifiers::CONTROL),
+        )?;
+        mods.set(
+            "alt",
+            modifiers.contains(crossterm::event::KeyModifiers::ALT),
+        )?;
+        mods.set(
+            "super",
+            modifiers.contains(crossterm::event::KeyModifiers::SUPER),
+        )?;
+        mods.set(
+            "hyper",
+            modifiers.contains(crossterm::event::KeyModifiers::HYPER),
+        )?;
+        mods.set(
+            "meta",
+            modifiers.contains(crossterm::event::KeyModifiers::META),
+        )?;
+        Ok(mods)
     }
 
     pub fn update_all_params(&mut self, app: &mut App) -> AppResult<()> {
