@@ -1,6 +1,4 @@
-use std::error;
-
-use crate::simulations::{fire::FireData, noise::NoiseData};
+use std::{collections::HashMap, error};
 
 /// Application result type.
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
@@ -9,32 +7,26 @@ pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 pub struct App {
     pub running: bool,
     pub particles: Vec<Vec<f64>>,
-    pub current_screen: CurrentScreen,
-    pub noise_data: NoiseData,
-    pub fire_data: FireData,
     pub show_info: bool,
-    pub particles_index: usize,
-    pub particles_styles: [[char; 4]; 2],
-}
-
-#[derive(Clone, PartialEq)]
-pub enum CurrentScreen {
-    Noise,
-    Fire,
+    pub texture_index: usize,
+    pub textures: Vec<Vec<char>>,
+    pub possible_simulations: Vec<String>,
+    pub current_simulation_idx: usize,
+    pub current_params: HashMap<String, f64>,
 }
 
 impl App {
     pub fn new() -> Self {
         App {
             running: true,
-            particles: vec![vec![0.0; 100]; 100],
-            current_screen: CurrentScreen::Noise,
-            noise_data: NoiseData::new(),
-            fire_data: FireData::new(),
+            particles: vec![vec![0.0; 1]; 1],
             show_info: false,
-            particles_index: 0,
-            particles_styles: [[' ', '·', '+', '#'], [' ', '.', 'o', '@']],
+            texture_index: 0,
+            textures: vec![],
             // Todo:  .:-=+*#%@  ▁▂▃▄▅▆▇█ ░▒▓█
+            possible_simulations: vec!["".to_string()],
+            current_simulation_idx: 0,
+            current_params: HashMap::new(),
         }
     }
 

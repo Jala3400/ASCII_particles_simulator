@@ -1,9 +1,10 @@
 [package]
-name = "ASCII_particles_simulator"
-version = "0.1.0"
+name = "ascii_particles_simulator"
+version = "0.2.0"
 edition = "2021"
 
 [dependencies]
 crossterm = "0.28.1"
+mlua = { version = "0.10.2", features = ["lua54", "vendored"] }
 rand = "0.8.5"
 ratatui = "0.28.1"
