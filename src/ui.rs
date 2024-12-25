@@ -8,8 +8,6 @@ use crate::app::App;
 
 pub fn render(f: &mut Frame, app: &mut App) {
     let f_area = f.area();
-    f.render_widget(Clear, f_area); //this clears the entire screen and anything already drawn
-
     let mut particles: String = String::new();
 
     for i in 0..app.particles.len() {
