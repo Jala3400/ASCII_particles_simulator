@@ -133,6 +133,10 @@ function Simulation:get_texture_index()
     return self.params.texture_index
 end
 
+function Simulation:set_config(config)
+    self.config = config or self.config
+end
+
 function Simulation:get_config()
     return self.config
 end

@@ -5,6 +5,10 @@ function Simulation.setup(particles)
     local self = setmetatable({}, Simulation)
     self.particles = particles
     self.textures = { { ' ', '·', '+', '#' }, { ' ', '.', 'o', '@' } }
+    self.config = {
+        color_enabled = false,
+        mill_per_frame = 250,
+    }
     self.params = {
         noise_intensity = 0.07,
         fire_intensity = 1.0,
@@ -19,6 +23,13 @@ function Simulation:simulate()
     local fire_intensity = self.params.fire_intensity
     local past_intensity = self.params.past_intensity
     local below_intensity = self.params.below_intensity
+
+    local should_update = {
+        particles = false,
+        simulation = false,
+        params = false,
+        config = false,
+    }
 
     local result = {}
 
@@ -44,7 +55,43 @@ function Simulation:simulate()
     end
 
     self.particles = result
-    return result
+
+    should_update.particles = true
+    return should_update
+end
+
+function Simulation:handle_key_events(key)
+    local should_update = {
+        particles = false,
+        simulation = false,
+        params = false,
+        config = false,
+    }
+
+    local key_actions = {
+        ['+'] = function() self.params.noise_intensity = self.params.noise_intensity + 0.01 end,
+        ['-'] = function() self.params.noise_intensity = self.params.noise_intensity - 0.01 end,
+        ['Up'] = function() self.params.below_intensity = self.params.below_intensity + 0.01 end,
+        ['Down'] = function() self.params.below_intensity = self.params.below_intensity - 0.01 end,
+        ['Right'] = function() self.params.past_intensity = self.params.past_intensity + 0.01 end,
+        ['Left'] = function() self.params.past_intensity = self.params.past_intensity - 0.01 end,
+        ['.'] = function() self.params.fire_intensity = self.params.fire_intensity + 0.01 end,
+        [','] = function() self.params.fire_intensity = self.params.fire_intensity - 0.01 end,
+        ['r'] = function()
+            self.params = {
+                noise_intensity = 0.07,
+                fire_intensity = 1.0,
+                past_intensity = 0.25,
+                below_intensity = 0.70
+            }
+        end
+    }
+
+    local key = key.code
+    if key_actions[key] then key_actions[key]() end
+
+    should_update.params = true
+    return should_update
 end
 
 function Simulation:set_particles(particles)
@@ -76,27 +123,18 @@ function Simulation:get_textures()
     return self.textures
 end
 
-function Simulation:handle_key_events(key)
-    local key = key.code
+function Simulation:set_texture_index(index)
+    self.params.texture_index = index
+end
 
-    local key_actions = {
-        ['+'] = function() self.params.noise_intensity = self.params.noise_intensity + 0.01 end,
-        ['-'] = function() self.params.noise_intensity = self.params.noise_intensity - 0.01 end,
-        ['Up'] = function() self.params.below_intensity = self.params.below_intensity + 0.01 end,
-        ['Down'] = function() self.params.below_intensity = self.params.below_intensity - 0.01 end,
-        ['Right'] = function() self.params.past_intensity = self.params.past_intensity + 0.01 end,
-        ['Left'] = function() self.params.past_intensity = self.params.past_intensity - 0.01 end,
-        ['.'] = function() self.params.fire_intensity = self.params.fire_intensity + 0.01 end,
-        [','] = function() self.params.fire_intensity = self.params.fire_intensity - 0.01 end,
-        ['r'] = function()
-            self.params = {
-                noise_intensity = 0.07,
-                fire_intensity = 1.0,
-                past_intensity = 0.25,
-                below_intensity = 0.70
-            }
-        end
-    }
+function Simulation:get_texture_index()
+    return self.params.texture_index
+end
 
-    if key_actions[key] then key_actions[key]() end
+function Simulation:set_config(config)
+    self.config = config or self.config
+end
+
+function Simulation:get_config()
+    return self.config
 end
