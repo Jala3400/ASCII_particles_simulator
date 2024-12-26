@@ -1,17 +1,11 @@
 use std::{collections::HashMap, error};
 
-use mlua::FromLua;
+use mlua::ObjectLike;
+
+use crate::lua_sim::{LuaSim, ShouldUpdate};
 
 /// Application result type.
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
-
-#[derive(Clone, FromLua)]
-pub struct ShouldUpdate {
-    pub simulation: bool,
-    pub particles: bool,
-    pub params: bool,
-    pub config: bool,
-}
 
 pub struct App {
     pub running: bool,
@@ -50,5 +44,28 @@ impl App {
 
     pub fn change_dimensions(&mut self, width: usize, height: usize) {
         self.particles = vec![vec![0.0; width]; height];
+    }
+
+    pub fn hande_update(&mut self, update: &mlua::Table, lua_sim: &LuaSim) -> AppResult<()> {
+        let should_update: ShouldUpdate = LuaSim::get_should_update(update)?;
+
+        if should_update.simulation {
+            let sim = lua_sim.simulation_instance.as_ref().unwrap();
+            let update: mlua::Table = sim.call_method("simulate", ())?;
+            self.hande_update(&update, lua_sim)?;
+        }
+
+        if should_update.particles {
+            lua_sim.update_particles(self)?;
+        }
+
+        if should_update.params {
+            lua_sim.update_params(self)?;
+        }
+
+        if should_update.config {
+            lua_sim.update_config(self)?;
+        }
+        Ok(())
     }
 }

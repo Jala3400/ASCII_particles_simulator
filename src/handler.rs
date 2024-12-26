@@ -1,6 +1,9 @@
 use crossterm::event::{self, KeyCode, KeyEvent};
 
-use crate::{app::{App, AppResult}, lua_sim::LuaSim};
+use crate::{
+    app::{App, AppResult},
+    lua_sim::LuaSim,
+};
 
 pub fn handle_key_events(
     key_event: KeyEvent,
@@ -20,6 +23,7 @@ pub fn handle_key_events(
         }
         Enter => {
             app.texture_index = (app.texture_index + 1) % app.textures.len();
+            lua_app.set_texture_index(app.texture_index)?;
         }
         Tab => {
             app.current_simulation_idx =

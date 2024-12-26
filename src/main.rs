@@ -1,10 +1,5 @@
 use app::{App, AppResult};
-use ascii_particles_simulator::{
-    app::{self, ShouldUpdate},
-    handler,
-    lua_sim::LuaSim,
-    tui,
-};
+use ascii_particles_simulator::{app, handler, lua_sim::LuaSim, tui};
 use crossterm::event::{self, Event};
 use handler::handle_key_events;
 use mlua::ObjectLike;
@@ -48,17 +43,8 @@ fn main() -> AppResult<()> {
 
         // Get the new particles
         let update: mlua::Table = sim.call_method("simulate", ())?;
-        let should_update = ShouldUpdate {
-            particles: update.get::<bool>("particles")?,
-            simulation: update.get::<bool>("simulation")?,
-            params: update.get::<bool>("params")?,
-            config: update.get::<bool>("config")?,
-        };
+        app.hande_update(&update, &lua_sim)?;
 
-        if should_update.particles {
-            let particles: Vec<Vec<f64>> = sim.call_method("get_particles", ())?;
-            app.particles = particles;
-        }
         tui.draw(&mut app).expect("Failed to draw UI");
 
         let frame_duration = Duration::from_millis(250);
