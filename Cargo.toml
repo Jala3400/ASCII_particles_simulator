@@ -5,6 +5,6 @@ edition = "2021"
 
 [dependencies]
 crossterm = "0.28.1"
-mlua = { version = "0.10.2", features = ["lua54", "vendored"] }
+mlua = { version = "0.10.2", features = ["lua54", "vendored", "macros"] }
 rand = "0.8.5"
 ratatui = "0.28.1"

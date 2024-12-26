@@ -3,6 +3,13 @@ use mlua::{Lua, ObjectLike};
 
 use crate::app::{App, AppResult};
 
+pub struct ShouldUpdate {
+    pub simulation: bool,
+    pub particles: bool,
+    pub params: bool,
+    pub config: bool,
+}
+
 pub struct LuaSim {
     pub current_simulation: Lua,                  // Store the Lua instance
     pub simulation_instance: Option<mlua::Table>, // Store the simulation instance
@@ -33,7 +40,7 @@ impl LuaSim {
 
         self.simulation_instance = Some(sim);
 
-        self.update_all_params(app)?;
+        self.update_all_data(app)?;
 
         Ok(())
     }
@@ -65,7 +72,7 @@ impl LuaSim {
             .unwrap()
             .call_method("handle_key_events", key_table)?;
 
-        self.update_all_params(app)?;
+        self.update_all_data(app)?;
 
         Ok(())
     }
@@ -103,9 +110,10 @@ impl LuaSim {
         Ok(mods)
     }
 
-    pub fn update_all_params(&mut self, app: &mut App) -> AppResult<()> {
+    pub fn update_all_data(&mut self, app: &mut App) -> AppResult<()> {
         self.update_params(app)?;
         self.update_textures(app)?;
+        self.update_config(app)?;
         Ok(())
     }
 
@@ -135,6 +143,17 @@ impl LuaSim {
             .iter()
             .map(|style| style.iter().map(|s| s.chars().next().unwrap()).collect())
             .collect();
+        Ok(())
+    }
+    pub fn update_config(&mut self, app: &mut App) -> AppResult<()> {
+        let sim = self.simulation_instance.as_ref().unwrap();
+
+        // get config
+        let config_table: mlua::Table = sim.call_method("get_config", ())?;
+
+        app.color_enabled = config_table.get::<bool>("color_enabled")?;
+        app.mill_per_frame = config_table.get::<u64>("mill_per_frame")?;
+
         Ok(())
     }
 }

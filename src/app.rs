@@ -1,9 +1,18 @@
 use std::{collections::HashMap, error};
 
+use mlua::FromLua;
+
 /// Application result type.
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 
-#[derive(Clone)]
+#[derive(Clone, FromLua)]
+pub struct ShouldUpdate {
+    pub simulation: bool,
+    pub particles: bool,
+    pub params: bool,
+    pub config: bool,
+}
+
 pub struct App {
     pub running: bool,
     pub particles: Vec<Vec<f64>>,
@@ -13,6 +22,8 @@ pub struct App {
     pub possible_simulations: Vec<String>,
     pub current_simulation_idx: usize,
     pub current_params: HashMap<String, f64>,
+    pub color_enabled: bool,
+    pub mill_per_frame: u64,
 }
 
 impl App {
@@ -27,6 +38,8 @@ impl App {
             possible_simulations: vec!["".to_string()],
             current_simulation_idx: 0,
             current_params: HashMap::new(),
+            color_enabled: false,
+            mill_per_frame: 250,
         }
     }
 

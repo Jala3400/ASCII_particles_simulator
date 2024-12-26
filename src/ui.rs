@@ -8,7 +8,7 @@ use crate::app::App;
 
 pub fn render(f: &mut Frame, app: &mut App) {
     let f_area = f.area();
-    let mut particles: String = String::new();
+    let mut particles = String::with_capacity(app.particles.len() * (app.particles[0].len()));
 
     for i in 0..app.particles.len() {
         for j in 0..app.particles[0].len() {
