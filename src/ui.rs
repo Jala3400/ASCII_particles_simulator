@@ -33,18 +33,16 @@ pub fn render(f: &mut Frame, app: &mut App) {
 }
 
 fn draw_info(f: &mut Frame, app: &mut App) {
-    let info_str = format!(
-        "{}\n",
-        app.current_params
-            .iter()
-            .map(|(k, v)| format!(" {}: {:.02}", k, v))
-            .collect::<Vec<_>>()
-            .join("\n")
-    );
+    let info_str = app.current_params.clone();
+
+    let (num_lines, max_line_length) = info_str.lines().fold((0, 0), |(count, max_len), line| {
+        (count + 1, max_len.max(line.chars().count()))
+    });
+
     let max_width = f.area().width.saturating_sub(2);
     let max_height = f.area().height.saturating_sub(2);
-    let width = max_width.min(50);
-    let height = max_height.min((app.current_params.len() + 2) as u16);
+    let width = max_width.min(50.max(max_line_length as u16));
+    let height = max_height.min((num_lines + 2) as u16);
     let area = centered_area(width as usize, height as usize, f.area());
     let info = Paragraph::new(info_str).block(
         Block::default()

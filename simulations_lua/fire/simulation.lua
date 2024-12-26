@@ -107,12 +107,18 @@ function Simulation:set_params(params)
 end
 
 function Simulation:get_params()
-    return {
-        { name = "noise_intensity", value = self.params.noise_intensity },
-        { name = "fire_intensity",  value = self.params.fire_intensity },
-        { name = "past_intensity",  value = self.params.past_intensity },
-        { name = "below_intensity", value = self.params.below_intensity }
-    }
+    return string.format(
+        [[
+Noise intensity: %.2f
+Fire intensity: %.2f
+Past intensity: %.2f
+Below intensity: %.2f
+]],
+        self.params.noise_intensity,
+        self.params.fire_intensity,
+        self.params.past_intensity,
+        self.params.below_intensity
+    )
 end
 
 function Simulation:set_textures(textures)

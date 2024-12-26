@@ -105,15 +105,8 @@ impl LuaSim {
         let sim = self.simulation_instance.as_ref().unwrap();
 
         // get params
-        let params_array: mlua::Table = sim.call_method("get_params", ())?;
+        app.current_params = sim.call_method("get_params", ())?;
 
-        app.current_params.clear();
-        for pair in params_array.pairs::<i32, mlua::Table>() {
-            let (_, param) = pair?;
-            let name: String = param.get("name")?;
-            let value: f64 = param.get("value")?;
-            app.current_params.insert(name, value);
-        }
         Ok(())
     }
 

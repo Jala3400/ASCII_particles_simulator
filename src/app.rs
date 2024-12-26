@@ -1,4 +1,4 @@
-use std::{collections::HashMap, error};
+use std::error;
 
 use mlua::ObjectLike;
 
@@ -15,7 +15,7 @@ pub struct App {
     pub textures: Vec<Vec<char>>,
     pub possible_simulations: Vec<String>,
     pub current_simulation_idx: usize,
-    pub current_params: HashMap<String, f64>,
+    pub current_params: String,
     pub color_enabled: bool,
     pub mill_per_frame: u64,
 }
@@ -31,7 +31,7 @@ impl App {
             // Todo:  .:-=+*#%@  ▁▂▃▄▅▆▇█ ░▒▓█
             possible_simulations: vec!["".to_string()],
             current_simulation_idx: 0,
-            current_params: HashMap::new(),
+            current_params: "".to_string(),
             color_enabled: false,
             mill_per_frame: 250,
         }

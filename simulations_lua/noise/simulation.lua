@@ -110,11 +110,16 @@ function Simulation:set_params(params)
 end
 
 function Simulation:get_params()
-    return {
-        { name = "noise_intensity", value = self.params.noise_intensity },
-        { name = "min_brightness",  value = self.params.min_brightness },
-        { name = "max_brightness",  value = self.params.max_brightness }
-    }
+    return string.format(
+        [[
+Noise intensity: %.2f
+Max brightness: %.2f
+Min brightness: %.2f
+]],
+        self.params.noise_intensity,
+        self.params.max_brightness,
+        self.params.min_brightness
+    )
 end
 
 function Simulation:set_textures(textures)
