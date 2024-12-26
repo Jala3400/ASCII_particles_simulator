@@ -7,7 +7,7 @@ function Simulation.setup(particles)
     self.textures = { { ' ', '·', '+', '#' }, { ' ', '.', 'o', '@' } }
     self.config = {
         color_enabled = false,
-        mill_per_frame = 250,
+        millis_per_frame = 250,
     }
     self.params = {
         noise_intensity = 0.07,

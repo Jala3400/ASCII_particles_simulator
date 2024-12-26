@@ -17,7 +17,7 @@ pub struct App {
     pub current_simulation_idx: usize,
     pub current_params: String,
     pub color_enabled: bool,
-    pub mill_per_frame: u64,
+    pub millis_per_frame: u64,
 }
 
 impl App {
@@ -33,7 +33,7 @@ impl App {
             current_simulation_idx: 0,
             current_params: "".to_string(),
             color_enabled: false,
-            mill_per_frame: 250,
+            millis_per_frame: 250,
         }
     }
 

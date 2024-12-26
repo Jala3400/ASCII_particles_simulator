@@ -129,7 +129,7 @@ impl LuaSim {
         let config_table: mlua::Table = sim.call_method("get_config", ())?;
 
         app.color_enabled = config_table.get::<bool>("color_enabled")?;
-        app.mill_per_frame = config_table.get::<u64>("mill_per_frame")?;
+        app.millis_per_frame = config_table.get::<u64>("millis_per_frame")?;
 
         Ok(())
     }

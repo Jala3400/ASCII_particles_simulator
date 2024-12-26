@@ -47,25 +47,49 @@ fn main() -> AppResult<()> {
 
         tui.draw(&mut app).expect("Failed to draw UI");
 
-        let frame_duration = Duration::from_millis(250);
-        let frame_start = std::time::Instant::now();
+        if app.millis_per_frame > 0 {
+            let frame_duration = Duration::from_millis(app.millis_per_frame);
+            let frame_start = std::time::Instant::now();
 
-        let remaining_time = frame_duration
-            .checked_sub(frame_start.elapsed())
-            .unwrap_or(Duration::from_millis(0));
+            let remaining_time = frame_duration
+                .checked_sub(frame_start.elapsed())
+                .unwrap_or(Duration::from_millis(0));
 
-        // Handle events until the frame duration is up
-        while frame_start.elapsed() < frame_duration {
-            if event::poll(remaining_time)? {
-                let event = event::read()?;
-                match event {
-                    Event::Key(event) => {
-                        handle_key_events(event, &mut app, &mut lua_sim)?;
+            // Handle events until the frame duration is up
+            while frame_start.elapsed() < frame_duration {
+                if event::poll(remaining_time)? {
+                    let event = event::read()?;
+                    match event {
+                        Event::Key(event) => {
+                            handle_key_events(event, &mut app, &mut lua_sim)?;
+                        }
+                        _ => {}
                     }
-                    _ => {}
+                    tui.draw(&mut app).expect("Failed to draw UI");
                 }
-                tui.draw(&mut app).expect("Failed to draw UI");
-                // tx.send(event).unwrap();
+            }
+        } else {
+            // When frame duration is 0, just wait for the next event
+            loop {
+                if let Ok(event) = event::read() {
+                    match event {
+                        Event::Key(event) => {
+                            if event.code == event::KeyCode::Tab {
+                                app.current_simulation_idx = (app.current_simulation_idx + 1)
+                                    % app.possible_simulations.len();
+                                lua_sim.switch_simulation(&mut app)?;
+                                break;
+                            }
+                            if event.code == event::KeyCode::Char('q') {
+                                app.quit();
+                                break;
+                            }
+                            handle_key_events(event, &mut app, &mut lua_sim)?;
+                        }
+                        _ => {}
+                    }
+                    tui.draw(&mut app).expect("Failed to draw UI");
+                }
             }
         }
     }

@@ -8,7 +8,7 @@ use crate::{
 pub fn handle_key_events(
     key_event: KeyEvent,
     app: &mut App,
-    lua_app: &mut LuaSim,
+    lua_sim: &mut LuaSim,
 ) -> AppResult<()> {
     if key_event.kind == event::KeyEventKind::Release {
         return Ok(());
@@ -23,15 +23,15 @@ pub fn handle_key_events(
         }
         Enter => {
             app.texture_index = (app.texture_index + 1) % app.textures.len();
-            lua_app.set_texture_index(app.texture_index)?;
+            lua_sim.set_texture_index(app.texture_index)?;
         }
         Tab => {
             app.current_simulation_idx =
                 (app.current_simulation_idx + 1) % app.possible_simulations.len();
-            lua_app.switch_simulation(app)?;
+            lua_sim.switch_simulation(app)?;
         }
         _ => {
-            lua_app.handle_key_events(key_event, app)?;
+            lua_sim.handle_key_events(key_event, app)?;
         }
     }
 
