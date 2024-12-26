@@ -51,13 +51,9 @@ fn main() -> AppResult<()> {
             let frame_duration = Duration::from_millis(app.millis_per_frame);
             let frame_start = std::time::Instant::now();
 
-            let remaining_time = frame_duration
-                .checked_sub(frame_start.elapsed())
-                .unwrap_or(Duration::from_millis(0));
-
-            // Handle events until the frame duration is up
-            while frame_start.elapsed() < frame_duration {
-                if event::poll(remaining_time)? {
+            // Process events until frame duration is up
+            while let Some(remaining) = frame_duration.checked_sub(frame_start.elapsed()) {
+                if event::poll(remaining)? {
                     let event = event::read()?;
                     match event {
                         Event::Key(event) => {
