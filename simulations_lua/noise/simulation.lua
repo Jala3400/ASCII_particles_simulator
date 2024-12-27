@@ -186,10 +186,6 @@ function Simulation:get_particles()
     return self.particles
 end
 
-function Simulation:set_params(params)
-    self.params = params or self.params
-end
-
 function Simulation:get_params()
     return string.format(
         [[

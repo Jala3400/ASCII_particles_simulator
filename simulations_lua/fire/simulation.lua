@@ -8,6 +8,7 @@ function Simulation.setup(particles)
     self.config = {
         color_enabled = false,
         millis_per_frame = 250,
+        texture_index = 0, -- starting at 0, because config is handled in rust
     }
     self.params = {
         noise_intensity = 0.07,
@@ -60,6 +61,30 @@ function Simulation:simulate()
     return should_update
 end
 
+function Simulation:handle_events(event)
+    local should_update = {
+        particles = false,
+        simulation = false,
+        params = false,
+        config = false,
+    }
+
+    local events = {
+        -- ['FocusGained'] = function() return self:handle_focus_gained() end,
+        -- ['FocusLost'] = function() return self:handle_focus_lost() end,
+        ['Key'] = function() return self:handle_key_events(event) end,
+        -- ['Mouse'] = function() return self:handle_mouse_events(event) end,
+        -- ['Paste'] = function() return self:handle_paste_events(event) end,
+        ['Resize'] = function() return self:handle_resize_events(event) end,
+    }
+
+    if events[event.type] then
+        should_update = events[event.type]()
+    end
+
+    return should_update
+end
+
 function Simulation:handle_key_events(key)
     local should_update = {
         particles = false,
@@ -94,16 +119,41 @@ function Simulation:handle_key_events(key)
     return should_update
 end
 
+function Simulation:handle_resize_events(event)
+    local should_update = {
+        particles = false,
+        simulation = false,
+        params = false,
+        config = false,
+    }
+
+    local result = {}
+
+    for i = 1, event.y do
+        result[i] = {}
+        for j = 1, event.x do
+            if self.particles[i] and self.particles[i][j] then
+                result[i][j] = self.particles[i][j]
+            else
+                local base_brightness = (i / event.y) * 0.8
+                local random_variation = (math.random() * 0.2) - 0.1
+                result[i][j] = math.max(0, math.min(1, base_brightness + random_variation))
+            end
+        end
+    end
+
+    self.particles = result
+
+    should_update.particles = true
+    return should_update
+end
+
 function Simulation:set_particles(particles)
     self.particles = particles or self.particles
 end
 
 function Simulation:get_particles()
     return self.particles
-end
-
-function Simulation:set_params(params)
-    self.params = params or self.params
 end
 
 function Simulation:get_params()
@@ -130,11 +180,11 @@ function Simulation:get_textures()
 end
 
 function Simulation:set_texture_index(index)
-    self.params.texture_index = index
+    self.config.texture_index = index
 end
 
 function Simulation:get_texture_index()
-    return self.params.texture_index
+    return self.config.texture_index
 end
 
 function Simulation:set_config(config)
