@@ -8,12 +8,12 @@ function Simulation.setup(particles)
     self.config = {
         color_enabled = false,
         millis_per_frame = 250,
+        texture_index = 0, -- starting at 0, because config is handled in rust
     }
     self.params = {
         noise_intensity = 1,
         min_brightness = 0.0,
         max_brightness = 1.0,
-        texture_index = 1,
     }
     return self
 end
@@ -129,6 +129,18 @@ function Simulation:handle_mouse_events(event)
         config = false,
     }
 
+    local mouse_actions = {
+        ['ScrollUp'] = function()
+            self.config.texture_index = (self.config.texture_index + 1) % #self.textures
+        end,
+        ['ScrollDown'] = function()
+            self.config.texture_index = (self.config.texture_index - 1 + #self.textures) % #self.textures
+        end,
+    }
+
+    if mouse_actions[event.kind] then mouse_actions[event.kind]() end
+
+    should_update.config = true
     return should_update
 end
 
@@ -200,11 +212,11 @@ function Simulation:get_textures()
 end
 
 function Simulation:set_texture_index(index)
-    self.params.texture_index = index
+    self.config.texture_index = index
 end
 
 function Simulation:get_texture_index()
-    return self.params.texture_index
+    return self.config.texture_index
 end
 
 function Simulation:set_config(config)

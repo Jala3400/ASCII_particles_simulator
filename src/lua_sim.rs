@@ -115,7 +115,7 @@ impl LuaSim {
         }
 
         if let Some(update) = update {
-            app.hande_update(&update, self)?;
+            app.handle_update(&update, self)?;
         }
 
         Ok(())
@@ -216,6 +216,7 @@ impl LuaSim {
 
         app.color_enabled = config_table.get::<bool>("color_enabled")?;
         app.millis_per_frame = config_table.get::<u64>("millis_per_frame")?;
+        app.texture_index = config_table.get::<usize>("texture_index")?;
 
         Ok(())
     }

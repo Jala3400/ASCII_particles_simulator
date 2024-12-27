@@ -46,13 +46,13 @@ impl App {
         self.particles = vec![vec![0.0; width]; height];
     }
 
-    pub fn hande_update(&mut self, update: &mlua::Table, lua_sim: &LuaSim) -> AppResult<()> {
+    pub fn handle_update(&mut self, update: &mlua::Table, lua_sim: &LuaSim) -> AppResult<()> {
         let should_update: ShouldUpdate = LuaSim::get_should_update(update)?;
 
         if should_update.simulation {
             let sim = lua_sim.simulation_instance.as_ref().unwrap();
             let update: mlua::Table = sim.call_method("simulate", ())?;
-            self.hande_update(&update, lua_sim)?;
+            self.handle_update(&update, lua_sim)?;
         }
 
         if should_update.particles {

@@ -43,7 +43,7 @@ fn main() -> AppResult<()> {
 
         // Get the new particles
         let update: mlua::Table = sim.call_method("simulate", ())?;
-        app.hande_update(&update, &lua_sim)?;
+        app.handle_update(&update, &lua_sim)?;
 
         tui.draw(&mut app).expect("Failed to draw UI");
 
