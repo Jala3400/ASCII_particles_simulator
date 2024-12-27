@@ -1,7 +1,7 @@
 use app::{App, AppResult};
 use ascii_particles_simulator::{app, handler, lua_sim::LuaSim, tui};
 use crossterm::event::{self, Event};
-use handler::handle_key_events;
+use handler::handle_events;
 use mlua::ObjectLike;
 use ratatui::prelude::*;
 use std::{io, time::Duration};
@@ -39,7 +39,7 @@ fn main() -> AppResult<()> {
         let sim = lua_sim.simulation_instance.as_ref().unwrap();
 
         // Check if the terminal size has changed
-        check_size(&mut app, sim, &tui)?;
+        check_size(&mut app, &tui)?;
 
         // Get the new particles
         let update: mlua::Table = sim.call_method("simulate", ())?;
@@ -55,37 +55,30 @@ fn main() -> AppResult<()> {
             while let Some(remaining) = frame_duration.checked_sub(frame_start.elapsed()) {
                 if event::poll(remaining)? {
                     let event = event::read()?;
-                    match event {
-                        Event::Key(event) => {
-                            handle_key_events(event, &mut app, &mut lua_sim)?;
-                        }
-                        _ => {}
-                    }
+                    handle_events(&event, &mut app, &mut lua_sim)?;
                     tui.draw(&mut app).expect("Failed to draw UI");
                 }
             }
         } else {
             // When frame duration is 0, just wait for the next event
-            loop {
+            while app.millis_per_frame == 0 {
                 if let Ok(event) = event::read() {
-                    match event {
-                        Event::Key(event) => {
-                            if event.code == event::KeyCode::Tab {
-                                app.current_simulation_idx = (app.current_simulation_idx + 1)
-                                    % app.possible_simulations.len();
-                                lua_sim.switch_simulation(&mut app)?;
-                                break;
-                            }
-                            if event.code == event::KeyCode::Char('q') {
-                                app.quit();
-                                break;
-                            }
-                            handle_key_events(event, &mut app, &mut lua_sim)?;
+                    if let Event::Key(event) = event {
+                        if event.code == event::KeyCode::Tab {
+                            app.current_simulation_idx =
+                                (app.current_simulation_idx + 1) % app.possible_simulations.len();
+                            lua_sim.switch_simulation(&mut app)?;
+                            break;
                         }
-                        _ => {}
+                        if event.code == event::KeyCode::Char('q') {
+                            app.quit();
+                            break;
+                        }
+                    } else {
+                        handle_events(&event, &mut app, &mut lua_sim)?;
                     }
-                    tui.draw(&mut app).expect("Failed to draw UI");
                 }
+                tui.draw(&mut app).expect("Failed to draw UI");
             }
         }
     }
@@ -129,7 +122,6 @@ fn init_terminal(app: &mut App) -> AppResult<Tui<CrosstermBackend<io::Stdout>>> 
 
 fn check_size(
     app: &mut App,
-    simulation: &mlua::Table,
     tui: &Tui<CrosstermBackend<io::Stdout>>,
 ) -> AppResult<()> {
     let current_height = app.particles.len();
@@ -140,7 +132,6 @@ fn check_size(
     let height = terminal_size.height as usize;
     if width != current_width || height != current_height {
         app.change_dimensions(width as usize, height as usize);
-        let _: () = simulation.call_method("set_particles", app.particles.clone())?;
     }
 
     Ok(())

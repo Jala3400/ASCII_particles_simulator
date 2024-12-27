@@ -1,4 +1,4 @@
-use crossterm::event::KeyEvent;
+use crossterm::event::{Event, KeyEvent, MouseEvent};
 use mlua::{Lua, ObjectLike};
 
 use crate::app::{App, AppResult};
@@ -63,7 +63,65 @@ impl LuaSim {
         });
     }
 
-    pub fn handle_key_events(&self, key_event: KeyEvent, app: &mut App) -> AppResult<()> {
+    pub fn handle_events(&self, event: &Event, app: &mut App) -> AppResult<()> {
+        let update;
+        match event {
+            Event::FocusGained => {
+                update = self
+                    .simulation_instance
+                    .as_ref()
+                    .unwrap()
+                    .call_method("handle_events", "{type = FocusGained}")?;
+            }
+            Event::FocusLost => {
+                update = self
+                    .simulation_instance
+                    .as_ref()
+                    .unwrap()
+                    .call_method("handle_events", "{type = FocusLost}")?;
+            }
+            Event::Key(key_event) => {
+                let key_table = self.format_key_events(key_event)?;
+                update = self
+                    .simulation_instance
+                    .as_ref()
+                    .unwrap()
+                    .call_method("handle_events", key_table)?;
+            }
+            Event::Mouse(mouse_event) => {
+                let mouse_table = self.format_mouse_events(mouse_event)?;
+                update = self
+                    .simulation_instance
+                    .as_ref()
+                    .unwrap()
+                    .call_method("handle_events", mouse_table)?;
+            }
+            Event::Paste(paste_event) => {
+                let paste_table = self.format_paste_events(paste_event)?;
+                update = self
+                    .simulation_instance
+                    .as_ref()
+                    .unwrap()
+                    .call_method("handle_events", paste_table)?;
+            }
+            Event::Resize(x, y) => {
+                let resize_table = self.format_resize_events(*x, *y)?;
+                update = self
+                    .simulation_instance
+                    .as_ref()
+                    .unwrap()
+                    .call_method("handle_events", resize_table)?;
+            }
+        }
+
+        if let Some(update) = update {
+            app.hande_update(&update, self)?;
+        }
+
+        Ok(())
+    }
+
+    fn format_key_events(&self, key_event: &KeyEvent) -> AppResult<mlua::Table> {
         let lua = &self.current_simulation;
         let key = match key_event.code {
             crossterm::event::KeyCode::Char(c) => c.to_string(),
@@ -71,19 +129,47 @@ impl LuaSim {
         };
 
         let key_table = lua.create_table()?;
+        key_table.set("type", "Key")?;
         key_table.set("code", format!("{}", key))?;
         key_table.set("modifiers", self.format_modifiers(key_event.modifiers)?)?;
         key_table.set("kind", format!("{:?}", key_event.kind))?;
 
-        let update: mlua::Table = self
-            .simulation_instance
-            .as_ref()
-            .unwrap()
-            .call_method("handle_key_events", key_table)?;
+        Ok(key_table)
+    }
 
-        app.hande_update(&update, self)?;
+    fn format_mouse_events(&self, mouse_event: &MouseEvent) -> AppResult<mlua::Table> {
+        let lua = &self.current_simulation;
+        let (kind, button): (&str, &str) = match mouse_event.kind {
+            crossterm::event::MouseEventKind::Down(button) => ("Down", &format!("{:?}", button)),
+            crossterm::event::MouseEventKind::Up(button) => ("Up", &format!("{:?}", button)),
+            crossterm::event::MouseEventKind::Drag(button) => ("Drag", &format!("{:?}", button)),
+            _ => (&format!("{:?}", mouse_event.kind), "None"),
+        };
+        let mouse_table = lua.create_table()?;
+        mouse_table.set("type", "Mouse")?;
+        mouse_table.set("x", mouse_event.row)?;
+        mouse_table.set("y", mouse_event.column)?;
+        mouse_table.set("kind", kind)?;
+        mouse_table.set("button", button)?;
+        mouse_table.set("modifiers", self.format_modifiers(mouse_event.modifiers)?)?;
+        Ok(mouse_table)
+    }
 
-        Ok(())
+    fn format_paste_events(&self, paste_event: &String) -> AppResult<mlua::Table> {
+        let lua = &self.current_simulation;
+        let paste_table = lua.create_table()?;
+        paste_table.set("type", "Paste")?;
+        paste_table.set("text", paste_event.clone())?;
+        Ok(paste_table)
+    }
+
+    fn format_resize_events(&self, x: u16, y: u16) -> AppResult<mlua::Table> {
+        let lua = &self.current_simulation;
+        let resize_table = lua.create_table()?;
+        resize_table.set("type", "Resize")?;
+        resize_table.set("x", x)?;
+        resize_table.set("y", y)?;
+        Ok(resize_table)
     }
 
     pub fn update_all_data(&self, app: &mut App) -> AppResult<()> {

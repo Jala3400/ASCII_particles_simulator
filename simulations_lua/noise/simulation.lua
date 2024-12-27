@@ -49,6 +49,30 @@ function Simulation:simulate()
     return should_update
 end
 
+function Simulation:handle_events(event)
+    local should_update = {
+        particles = false,
+        simulation = false,
+        params = false,
+        config = false,
+    }
+
+    local events = {
+        -- ['FocusGained'] = function() return self:handle_focus_gained() end,
+        -- ['FocusLost'] = function() return self:handle_focus_lost() end,
+        ['Key'] = function() return self:handle_key_events(event) end,
+        ['Mouse'] = function() return self:handle_mouse_events(event) end,
+        -- ['Paste'] = function() return self:handle_paste_events(event) end,
+        ['Resize'] = function() return self:handle_resize_events(event) end,
+    }
+
+    if events[event.type] then
+        should_update = events[event.type]()
+    end
+
+    return should_update
+end
+
 function Simulation:handle_key_events(key_event)
     local should_update = {
         particles = false,
@@ -94,6 +118,51 @@ function Simulation:handle_key_events(key_event)
     if key_actions[key] then key_actions[key]() end
 
     should_update.params = true
+    return should_update
+end
+
+function Simulation:handle_mouse_events(event)
+    local should_update = {
+        particles = false,
+        simulation = false,
+        params = false,
+        config = false,
+    }
+
+    return should_update
+end
+
+function Simulation:handle_resize_events(event)
+    local noise_intensity = self.params.noise_intensity
+    local min_brightness = self.params.min_brightness
+    local max_brightness = self.params.max_brightness
+
+    local should_update = {
+        particles = false,
+        simulation = false,
+        params = false,
+        config = false,
+    }
+
+    local result = {}
+
+    for i = 1, event.y do
+        result[i] = {}
+        for j = 1, event.x do
+            if self.particles[i] and self.particles[i][j] then
+                result[i][j] = self.particles[i][j]
+            else
+                local particle_brightness = (min_brightness + math.random() *
+                    (max_brightness - min_brightness)) * noise_intensity
+
+                result[i][j] = particle_brightness
+            end
+        end
+    end
+
+    self.particles = result
+
+    should_update.particles = true
     return should_update
 end
 
