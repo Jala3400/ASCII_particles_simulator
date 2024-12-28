@@ -17,11 +17,6 @@ fn main() -> AppResult<()> {
     let mut tui = init_terminal(&mut app)?;
     tui.init()?;
 
-    let terminal_size = tui.terminal.size()?;
-    let width = terminal_size.width as usize;
-    let height = terminal_size.height as usize;
-    app.change_dimensions(width, height);
-
     let mut lua_sim = LuaSim::new();
 
     // Set up the initial simulation

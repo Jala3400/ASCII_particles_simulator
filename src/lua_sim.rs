@@ -128,11 +128,11 @@ impl LuaSim {
             _ => format!("{:?}", key_event.code),
         };
 
-        let key_table = lua.create_table()?;
-        key_table.set("type", "Key")?;
-        key_table.set("code", format!("{}", key))?;
-        key_table.set("modifiers", self.format_modifiers(key_event.modifiers)?)?;
-        key_table.set("kind", format!("{:?}", key_event.kind))?;
+        let key_table = lua.create_table_with_capacity(4, 0)?;
+        key_table.raw_set("type", "Key")?;
+        key_table.raw_set("code", format!("{}", key))?;
+        key_table.raw_set("modifiers", self.format_modifiers(key_event.modifiers)?)?;
+        key_table.raw_set("kind", format!("{:?}", key_event.kind))?;
 
         Ok(key_table)
     }
@@ -145,13 +145,13 @@ impl LuaSim {
             crossterm::event::MouseEventKind::Drag(button) => ("Drag", &format!("{:?}", button)),
             _ => (&format!("{:?}", mouse_event.kind), "None"),
         };
-        let mouse_table = lua.create_table()?;
-        mouse_table.set("type", "Mouse")?;
-        mouse_table.set("x", mouse_event.row)?;
-        mouse_table.set("y", mouse_event.column)?;
-        mouse_table.set("kind", kind)?;
-        mouse_table.set("button", button)?;
-        mouse_table.set("modifiers", self.format_modifiers(mouse_event.modifiers)?)?;
+        let mouse_table = lua.create_table_with_capacity(6, 0)?;
+        mouse_table.raw_set("type", "Mouse")?;
+        mouse_table.raw_set("x", mouse_event.row)?;
+        mouse_table.raw_set("y", mouse_event.column)?;
+        mouse_table.raw_set("kind", kind)?;
+        mouse_table.raw_set("button", button)?;
+        mouse_table.raw_set("modifiers", self.format_modifiers(mouse_event.modifiers)?)?;
         Ok(mouse_table)
     }
 
@@ -165,10 +165,10 @@ impl LuaSim {
 
     fn format_resize_events(&self, x: u16, y: u16) -> AppResult<mlua::Table> {
         let lua = &self.current_simulation;
-        let resize_table = lua.create_table()?;
-        resize_table.set("type", "Resize")?;
-        resize_table.set("x", x)?;
-        resize_table.set("y", y)?;
+        let resize_table = lua.create_table_with_capacity(3, 0)?;
+        resize_table.raw_set("type", "Resize")?;
+        resize_table.raw_set("x", x)?;
+        resize_table.raw_set("y", y)?;
         Ok(resize_table)
     }
 
@@ -214,7 +214,6 @@ impl LuaSim {
         // get config
         let config_table: mlua::Table = sim.call_method("get_config", ())?;
 
-        app.color_enabled = config_table.get::<bool>("color_enabled")?;
         app.millis_per_frame = config_table.get::<u64>("millis_per_frame")?;
         app.texture_index = config_table.get::<usize>("texture_index")?;
 
@@ -232,28 +231,28 @@ impl LuaSim {
         modifiers: crossterm::event::KeyModifiers,
     ) -> AppResult<mlua::Table> {
         let lua = &self.current_simulation;
-        let mods = lua.create_table()?;
-        mods.set(
+        let mods = lua.create_table_with_capacity(6, 0)?;
+        mods.raw_set(
             "shift",
             modifiers.contains(crossterm::event::KeyModifiers::SHIFT),
         )?;
-        mods.set(
+        mods.raw_set(
             "ctrl",
             modifiers.contains(crossterm::event::KeyModifiers::CONTROL),
         )?;
-        mods.set(
+        mods.raw_set(
             "alt",
             modifiers.contains(crossterm::event::KeyModifiers::ALT),
         )?;
-        mods.set(
+        mods.raw_set(
             "super",
             modifiers.contains(crossterm::event::KeyModifiers::SUPER),
         )?;
-        mods.set(
+        mods.raw_set(
             "hyper",
             modifiers.contains(crossterm::event::KeyModifiers::HYPER),
         )?;
-        mods.set(
+        mods.raw_set(
             "meta",
             modifiers.contains(crossterm::event::KeyModifiers::META),
         )?;

@@ -6,7 +6,6 @@ function Simulation.setup(particles)
     self.particles = particles
     self.textures = { { ' ', '·', '+', '#' }, { ' ', '.', 'o', '@' } }
     self.config = {
-        color_enabled = false,
         millis_per_frame = 250,
         texture_index = 0, -- starting at 0, because config is handled in rust
     }

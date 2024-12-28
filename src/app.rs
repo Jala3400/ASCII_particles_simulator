@@ -16,7 +16,6 @@ pub struct App {
     pub possible_simulations: Vec<String>,
     pub current_simulation_idx: usize,
     pub current_params: String,
-    pub color_enabled: bool,
     pub millis_per_frame: u64,
 }
 
@@ -24,7 +23,7 @@ impl App {
     pub fn new() -> Self {
         App {
             running: true,
-            particles: vec![vec![0.0; 1]; 1],
+            particles: Vec::new(),
             show_info: false,
             texture_index: 0,
             textures: vec![],
@@ -32,7 +31,6 @@ impl App {
             possible_simulations: vec!["".to_string()],
             current_simulation_idx: 0,
             current_params: "".to_string(),
-            color_enabled: false,
             millis_per_frame: 250,
         }
     }

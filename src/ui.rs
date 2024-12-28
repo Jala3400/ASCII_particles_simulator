@@ -1,5 +1,6 @@
 use ratatui::{
     layout::Rect,
+    text::Text,
     widgets::{Block, BorderType, Borders, Clear, Paragraph},
     Frame,
 };
@@ -8,22 +9,19 @@ use crate::app::App;
 
 pub fn render(f: &mut Frame, app: &mut App) {
     let f_area = f.area();
-    let mut particles = String::with_capacity(app.particles.len() * (app.particles[0].len()));
+    let length = app.textures[app.texture_index].len() as f64;
+    let texture = app.textures[app.texture_index].clone();
+    let mut particles = String::with_capacity(app.particles.len() * (app.particles[0].len() + 1));
 
-    for i in 0..app.particles.len() {
-        for j in 0..app.particles[0].len() {
-            let particle_brightness = app.particles[i][j];
-
-            let length = app.textures[app.texture_index].len() as f64;
-
+    for row in &app.particles {
+        for &particle_brightness in row {
             let idx = (particle_brightness * length).clamp(0.0, length - 1.0) as usize;
-
-            particles.push(app.textures[app.texture_index][idx]);
+            particles.push(texture[idx]);
         }
         particles.push('\n');
     }
 
-    let particles = Paragraph::new(particles);
+    let particles = Text::raw(particles);
 
     f.render_widget(particles, f_area);
 
