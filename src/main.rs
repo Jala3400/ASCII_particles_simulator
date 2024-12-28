@@ -34,19 +34,9 @@ fn main() -> AppResult<()> {
     app.current_simulation_idx = noise_idx;
 
     lua_sim.load_simulation(&mut app)?;
+    tui.draw(&mut app).expect("Failed to draw UI");
 
     while app.running {
-        let sim = lua_sim.simulation_instance.as_ref().unwrap();
-
-        // Check if the terminal size has changed
-        check_size(&mut app, &tui)?;
-
-        // Get the new particles
-        let update: mlua::Table = sim.call_method("simulate", ())?;
-        app.handle_update(&update, &lua_sim)?;
-
-        tui.draw(&mut app).expect("Failed to draw UI");
-
         if app.millis_per_frame > 0 {
             let frame_duration = Duration::from_millis(app.millis_per_frame);
             let frame_start = std::time::Instant::now();
@@ -81,6 +71,17 @@ fn main() -> AppResult<()> {
                 tui.draw(&mut app).expect("Failed to draw UI");
             }
         }
+
+        let sim = lua_sim.simulation_instance.as_ref().unwrap();
+
+        // Check if the terminal size has changed
+        check_size(&mut app, &tui)?;
+
+        // Get the new particles
+        let update: mlua::Table = sim.call_method("simulate", ())?;
+        app.handle_update(&update, &lua_sim)?;
+
+        tui.draw(&mut app).expect("Failed to draw UI");
     }
 
     // Exit the user interface.
@@ -120,10 +121,7 @@ fn init_terminal(app: &mut App) -> AppResult<Tui<CrosstermBackend<io::Stdout>>> 
     Ok(Tui::new(terminal))
 }
 
-fn check_size(
-    app: &mut App,
-    tui: &Tui<CrosstermBackend<io::Stdout>>,
-) -> AppResult<()> {
+fn check_size(app: &mut App, tui: &Tui<CrosstermBackend<io::Stdout>>) -> AppResult<()> {
     let current_height = app.particles.len();
     let current_width = app.particles[0].len();
 
