@@ -233,27 +233,27 @@ impl LuaSim {
         let lua = &self.current_simulation;
         let mods = lua.create_table_with_capacity(6, 0)?;
         mods.raw_set(
-            "shift",
+            "Shift",
             modifiers.contains(crossterm::event::KeyModifiers::SHIFT),
         )?;
         mods.raw_set(
-            "ctrl",
+            "Ctrl",
             modifiers.contains(crossterm::event::KeyModifiers::CONTROL),
         )?;
         mods.raw_set(
-            "alt",
+            "Alt",
             modifiers.contains(crossterm::event::KeyModifiers::ALT),
         )?;
         mods.raw_set(
-            "super",
+            "Super",
             modifiers.contains(crossterm::event::KeyModifiers::SUPER),
         )?;
         mods.raw_set(
-            "hyper",
+            "Hyper",
             modifiers.contains(crossterm::event::KeyModifiers::HYPER),
         )?;
         mods.raw_set(
-            "meta",
+            "Meta",
             modifiers.contains(crossterm::event::KeyModifiers::META),
         )?;
         Ok(mods)

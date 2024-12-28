@@ -46,7 +46,7 @@ fn main() -> AppResult<()> {
             }
         } else {
             // When frame duration is 0, just wait for the next event
-            while app.millis_per_frame == 0 {
+            while app.millis_per_frame <= 0 {
                 if let Ok(event) = event::read() {
                     if let Event::Key(event) = event {
                         if event.code == event::KeyCode::Tab {
@@ -68,9 +68,6 @@ fn main() -> AppResult<()> {
         }
 
         let sim = lua_sim.simulation_instance.as_ref().unwrap();
-
-        // Check if the terminal size has changed
-        check_size(&mut app, &tui)?;
 
         // Get the new particles
         let update: mlua::Table = sim.call_method("simulate", ())?;
@@ -114,18 +111,4 @@ fn init_terminal(app: &mut App) -> AppResult<Tui<CrosstermBackend<io::Stdout>>> 
     app.change_dimensions(screen_width, screen_height);
 
     Ok(Tui::new(terminal))
-}
-
-fn check_size(app: &mut App, tui: &Tui<CrosstermBackend<io::Stdout>>) -> AppResult<()> {
-    let current_height = app.particles.len();
-    let current_width = app.particles[0].len();
-
-    let terminal_size = tui.terminal.size()?;
-    let width = terminal_size.width as usize;
-    let height = terminal_size.height as usize;
-    if width != current_width || height != current_height {
-        app.change_dimensions(width as usize, height as usize);
-    }
-
-    Ok(())
 }
