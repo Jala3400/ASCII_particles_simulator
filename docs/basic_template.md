@@ -1,3 +1,10 @@
+# Plantilla base
+
+Esto puede servir como punto de inicio más básico.
+
+Tiene los métodos mínimos para funcionar, pero se recomienda mirar el [ejemplo de ruido](noise_lua_example.md) para ver cómo se hacen simulaciones más complejas.
+
+```lua
 Simulation = {}
 Simulation.__index = Simulation
 
@@ -10,23 +17,15 @@ function Simulation.setup(particles)
         texture_index = 0, -- starting at 0, because config is handled in rust
     }
     self.params = {
-        noise_intensity = 0.07,
-        fire_intensity = 1.0,
-        past_intensity = 0.25,
-        below_intensity = 0.70
+        intensity = 1,
     }
     return self
 end
 
 function Simulation:simulate()
-    local noise_intensity = self.params.noise_intensity
-    local fire_intensity = self.params.fire_intensity
-    local past_intensity = self.params.past_intensity
-    local below_intensity = self.params.below_intensity
-
     local should_update = {
-        simulation = false,
         particles = false,
+        simulation = false,
         params = false,
         config = false,
     }
@@ -37,18 +36,7 @@ function Simulation:simulate()
     for i = 1, #self.particles do
         result[i] = {}
         for j = 1, #self.particles[1] do
-            local past_brightness = self.particles[i][j] * past_intensity
-
-            local below_brightness = 1.0
-            if i < #self.particles then
-                below_brightness = self.particles[i + 1][j]
-            end
-            below_brightness = below_brightness * below_intensity
-
-            local noise_brightness = (math.random() * 2.0 - 1.0) * noise_intensity
-
-            local particle_brightness = (past_brightness + below_brightness + noise_brightness)
-                * fire_intensity
+            local particle_brightness = math.random() * self.params.intensity
 
             result[i][j] = particle_brightness
         end
@@ -62,8 +50,8 @@ end
 
 function Simulation:handle_events(event)
     local should_update = {
-        simulation = false,
         particles = false,
+        simulation = false,
         params = false,
         config = false,
     }
@@ -91,26 +79,12 @@ function Simulation:handle_key_events(key_event)
         params = false,
         config = false,
     }
-    
+
     if key_event.kind == "Release" then return should_update end
 
     local key_actions = {
-        ['+'] = function() self.params.noise_intensity = self.params.noise_intensity + 0.01 end,
-        ['-'] = function() self.params.noise_intensity = self.params.noise_intensity - 0.01 end,
-        ['Up'] = function() self.params.below_intensity = self.params.below_intensity + 0.01 end,
-        ['Down'] = function() self.params.below_intensity = self.params.below_intensity - 0.01 end,
-        ['Right'] = function() self.params.past_intensity = self.params.past_intensity + 0.01 end,
-        ['Left'] = function() self.params.past_intensity = self.params.past_intensity - 0.01 end,
-        ['.'] = function() self.params.fire_intensity = self.params.fire_intensity + 0.01 end,
-        [','] = function() self.params.fire_intensity = self.params.fire_intensity - 0.01 end,
-        ['r'] = function()
-            self.params = {
-                noise_intensity = 0.07,
-                fire_intensity = 1.0,
-                past_intensity = 0.25,
-                below_intensity = 0.70
-            }
-        end
+        ['+'] = function() self.params.intensity = self.params.intensity + 0.1 end,
+        ['-'] = function() self.params.intensity = self.params.intensity - 0.1 end,
     }
 
     local key = key_event.code
@@ -122,24 +96,17 @@ end
 
 function Simulation:handle_resize_events(event)
     local should_update = {
-        simulation = false,
         particles = false,
+        simulation = false,
         params = false,
         config = false,
     }
 
     local result = {}
-
     for i = 1, event.y do
         result[i] = {}
         for j = 1, event.x do
-            if self.particles[i] and self.particles[i][j] then
-                result[i][j] = self.particles[i][j]
-            else
-                local base_brightness = (i / event.y) * 0.8
-                local random_variation = (math.random() * 0.2) - 0.1
-                result[i][j] = math.max(0, math.min(1, base_brightness + random_variation))
-            end
+            result[i][j] = 0
         end
     end
 
@@ -160,15 +127,9 @@ end
 function Simulation:get_params()
     return string.format(
         [[
-Noise intensity: %.2f
-Fire intensity: %.2f
-Past intensity: %.2f
-Below intensity: %.2f
+Noise intensity: %.1f
 ]],
-        self.params.noise_intensity,
-        self.params.fire_intensity,
-        self.params.past_intensity,
-        self.params.below_intensity
+        self.params.intensity
     )
 end
 
@@ -195,3 +156,4 @@ end
 function Simulation:get_config()
     return self.config
 end
+```

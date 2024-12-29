@@ -1,3 +1,24 @@
+# Ejemplo ruido
+
+La simulación viene de la simulación de [ruido](../simulations_lua/noise/simulation.lua)
+
+Vamos a explicarla paso por paso:
+
+# Índice
+
+- [Ejemplo ruido](#ejemplo-ruido)
+- [Índice](#índice)
+- [Setup](#setup)
+- [Simulate](#simulate)
+- [Handle events](#handle-events)
+  - [Handle key events](#handle-key-events)
+  - [Handle mouse events](#handle-mouse-events)
+  - [Handle resize events](#handle-resize-events)
+- [Getters y setters](#getters-y-setters)
+
+# Setup
+
+```lua
 Simulation = {}
 Simulation.__index = Simulation
 
@@ -16,6 +37,30 @@ function Simulation.setup(particles)
     }
     return self
 end
+```
+
+Las dos primeras líneas son necesarias para crear la clase `Simulation`.
+
+El método `setup` inicializa la simulación con los siguientes atributos:
+
+-   `particles` es una tabla de tablas de números que representan la luminosidad de cada partícula.
+    Estas son las partículas que se van a mostrar en la simulación. Son solo valores numéricos, la conversión a caracteres se hace en rust.
+    Los valores deben ir entre 0 y 1, pero si están fuera de ese rango se ajustarán automáticamente.
+
+-   `textures` es una tabla de tablas de caracteres que representan las partículas.
+    Son los posibles caracteres que se pueden usar para representar las partículas. Se pueden añadir más caracteres si se quiere.
+    Cada tabla representa una textura. pulsando Enter se cambia a la siguiente textura.
+    Deben estar ordenados de menor a mayor luminosidad.
+
+-   `config` es una tabla de configuración de la simulación. Guarda el tiempo entre cada frame y el índice de la textura actual.
+
+-   `params` es una tabla de parámetros de la simulación. No es necesario, pero ayuda a tener localizados los que se muestran por pantalla.
+
+Técnicamente no es necesario tener estos atributos, ya que la aplicación solo se comunicará con la simulación mediante los métodos.
+
+# Simulate
+
+```lua
 
 function Simulation:simulate()
     local noise_intensity = self.params.noise_intensity
@@ -47,7 +92,18 @@ function Simulation:simulate()
     should_update.particles = true
     return should_update
 end
+```
 
+Este método se llama antes de actualizar el frame. En este caso, se genera un ruido aleatorio en cada partícula.
+
+Podemos ver que se crea la estructura `should_update` que indica qué atributos deben actualizar. En este caso, solo se marca `particles`.
+Luego procesamos las partículas y sustituimos las antiguas por las nuevas.
+
+Siempre se debe devolver `should_update`.
+
+# Handle events
+
+```lua
 function Simulation:handle_events(event)
     local should_update = {
         simulation = false,
@@ -71,6 +127,19 @@ function Simulation:handle_events(event)
 
     return should_update
 end
+```
+
+Se llama a esta función cada vez que se registra un evento en la aplicación.
+
+Todos los eventos tienen el campo `type`, que indica qué tipo de evento es. En este caso, solo se gestionan los eventos de teclado y de redimensionado.
+
+Siempre se debe gestionar al campo de redimensionado, ya que, si no se hace, la simulación no se verá correctamente.
+
+En este caso la función redirecciona a otras funciones. Para ver todos los detalles de los eventos, se puede mirar en [básicos](basics.md#argumentos).
+
+## Handle key events
+
+```lua
 
 function Simulation:handle_key_events(key_event)
     local should_update = {
@@ -121,7 +190,17 @@ function Simulation:handle_key_events(key_event)
     should_update.params = true
     return should_update
 end
+```
 
+Este método se llama cuando una tecla ha sido pulsada.
+
+Para seleccionar de forma eficiente la acción a realizar, se usa una tabla de acciones. Cada acción se asocia a una tecla.
+
+Solo se cambian los parámetros, por lo que solo se marca `params` en `should_update`.
+
+## Handle mouse events
+
+```lua
 function Simulation:handle_mouse_events(event)
     local should_update = {
         simulation = false,
@@ -144,7 +223,13 @@ function Simulation:handle_mouse_events(event)
     should_update.config = true
     return should_update
 end
+```
 
+Este método se llama cuando se ha registrado un evento de ratón. En este caso se puede cambiar la textura actual con la rueda del ratón, por lo que hay que actualizar la configuración.
+
+## Handle resize events
+
+```lua
 function Simulation:handle_resize_events(event)
     local noise_intensity = self.params.noise_intensity
     local min_brightness = self.params.min_brightness
@@ -178,7 +263,15 @@ function Simulation:handle_resize_events(event)
     should_update.particles = true
     return should_update
 end
+```
 
+Este método se llama cuando se ha redimensionado la consola. En este caso se mantienen las partículas que estaban ya en la simulación y se añaden las nuevas aleatoriamente.
+
+También hay que actualizar las partículas.
+
+# Getters y setters
+
+```lua
 function Simulation:set_particles(particles)
     self.particles = particles or self.particles
 end
@@ -223,3 +316,8 @@ end
 function Simulation:get_config()
     return self.config
 end
+```
+
+Estos métodos son necesarios para que la aplicación pueda cambiar los valores de la simulación.
+
+Todos siguen el mismo formato menos `get_params`, que devuelve un string con el texto que se quiera.
