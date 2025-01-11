@@ -147,8 +147,8 @@ impl LuaSim {
         };
         let mouse_table = lua.create_table_with_capacity(6, 0)?;
         mouse_table.raw_set("type", "Mouse")?;
-        mouse_table.raw_set("x", mouse_event.row)?;
-        mouse_table.raw_set("y", mouse_event.column)?;
+        mouse_table.raw_set("x", mouse_event.column)?;
+        mouse_table.raw_set("y", mouse_event.row)?;
         mouse_table.raw_set("kind", kind)?;
         mouse_table.raw_set("button", button)?;
         mouse_table.raw_set("modifiers", self.format_modifiers(mouse_event.modifiers)?)?;
