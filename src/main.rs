@@ -46,25 +46,24 @@ fn main() -> AppResult<()> {
             }
         } else {
             // When frame duration is 0, just wait for the next event
-            while app.millis_per_frame <= 0 {
-                if let Ok(event) = event::read() {
-                    if let Event::Key(event) = event {
-                        if event.code == event::KeyCode::Tab {
-                            app.current_simulation_idx =
-                                (app.current_simulation_idx + 1) % app.possible_simulations.len();
-                            lua_sim.switch_simulation(&mut app)?;
-                            break;
-                        }
-                        if event.code == event::KeyCode::Char('q') {
-                            app.quit();
-                            break;
-                        }
+            if let Ok(event) = event::read() {
+                if let Event::Key(event) = event {
+                    if event.code == event::KeyCode::Tab {
+                        app.current_simulation_idx =
+                            (app.current_simulation_idx + 1) % app.possible_simulations.len();
+                        lua_sim.switch_simulation(&mut app)?;
+                        break;
+                    } else if event.code == event::KeyCode::Char('q') {
+                        app.quit();
+                        break;
                     } else {
-                        handle_events(&event, &mut app, &mut lua_sim)?;
+                        handle_events(&Event::Key(event), &mut app, &mut lua_sim)?;
                     }
+                } else {
+                    handle_events(&event, &mut app, &mut lua_sim)?;
                 }
-                tui.draw(&mut app).expect("Failed to draw UI");
             }
+            tui.draw(&mut app).expect("Failed to draw UI");
         }
 
         let sim = lua_sim.simulation_instance.as_ref().unwrap();
