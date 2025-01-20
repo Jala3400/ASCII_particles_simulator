@@ -65,54 +65,28 @@ impl LuaSim {
 
     pub fn handle_events(&self, event: &Event, app: &mut App) -> AppResult<()> {
         let update;
-        match event {
+        let event_table = match event {
             Event::FocusGained => {
-                update = self
-                    .simulation_instance
-                    .as_ref()
-                    .unwrap()
-                    .call_method("handle_events", "{type = FocusGained}")?;
+                let table = self.current_simulation.create_table()?;
+                table.set("type", "FocusGained")?;
+                table
             }
             Event::FocusLost => {
-                update = self
-                    .simulation_instance
-                    .as_ref()
-                    .unwrap()
-                    .call_method("handle_events", "{type = FocusLost}")?;
+                let table = self.current_simulation.create_table()?;
+                table.set("type", "FocusLost")?;
+                table
             }
-            Event::Key(key_event) => {
-                let key_table = self.format_key_events(key_event)?;
-                update = self
-                    .simulation_instance
-                    .as_ref()
-                    .unwrap()
-                    .call_method("handle_events", key_table)?;
-            }
-            Event::Mouse(mouse_event) => {
-                let mouse_table = self.format_mouse_events(mouse_event)?;
-                update = self
-                    .simulation_instance
-                    .as_ref()
-                    .unwrap()
-                    .call_method("handle_events", mouse_table)?;
-            }
-            Event::Paste(paste_event) => {
-                let paste_table = self.format_paste_events(paste_event)?;
-                update = self
-                    .simulation_instance
-                    .as_ref()
-                    .unwrap()
-                    .call_method("handle_events", paste_table)?;
-            }
-            Event::Resize(x, y) => {
-                let resize_table = self.format_resize_events(*x, *y)?;
-                update = self
-                    .simulation_instance
-                    .as_ref()
-                    .unwrap()
-                    .call_method("handle_events", resize_table)?;
-            }
-        }
+            Event::Key(key_event) => self.format_key_events(key_event)?,
+            Event::Mouse(mouse_event) => self.format_mouse_events(mouse_event)?,
+            Event::Paste(paste_event) => self.format_paste_events(paste_event)?,
+            Event::Resize(x, y) => self.format_resize_events(*x, *y)?,
+        };
+
+        update = self
+            .simulation_instance
+            .as_ref()
+            .ok_or("Simulation instance not initialized")?
+            .call_method("handle_events", event_table)?;
 
         if let Some(update) = update {
             app.handle_update(&update, self)?;
